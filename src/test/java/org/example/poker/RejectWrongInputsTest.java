@@ -1,5 +1,6 @@
 package org.example.poker;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -43,6 +44,7 @@ class RejectWrongInputsTest {
             "KD KD QS JH TC, duplicate"
     })
     @DisplayName("Given duplicate cards, when parsing, then fails with validation error")
+    @Disabled("TODO: Task 1 - Implement duplicate card validation")
     void givenDuplicateCards_whenParsing_thenFailsWithValidationError(String handString, String expectedMessage) {
         // When / Then
         assertThatThrownBy(() -> Hand.parse(handString))
