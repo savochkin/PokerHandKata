@@ -4,9 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Getter
 @Builder
@@ -19,11 +17,9 @@ public class Hand {
             throw new IllegalArgumentException("A hand must contain exactly 5 cards, got " + cards.size());
         }
         
-        // Check for duplicates
-        Set<Card> uniqueCards = new HashSet<>(cards);
-        if (uniqueCards.size() != 5) {
-            throw new IllegalArgumentException("Hand contains duplicate cards");
-        }
+        // TODO: Story 1 - Implement duplicate card validation
+        // Hint: A hand should not contain the same card twice
+        // Expected error message should contain "duplicate"
     }
 
     public boolean containsCard(Rank rank, Suit suit) {

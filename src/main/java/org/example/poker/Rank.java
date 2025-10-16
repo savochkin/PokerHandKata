@@ -29,6 +29,8 @@ public enum Rank {
                 return rank;
             }
         }
-        throw new IllegalArgumentException("Invalid rank: " + symbol);
+        // TODO: Task 2 - Handle invalid rank symbols
+        // Should throw IllegalArgumentException with message containing "Invalid rank"
+        return null;
     }
 }
