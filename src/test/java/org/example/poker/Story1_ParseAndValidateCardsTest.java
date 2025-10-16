@@ -23,7 +23,7 @@ class Story1_ParseAndValidateCardsTest {
             String handString = "AH KD 3C TD 9S";
 
             // When
-            Hand hand = HandParser.parseHand(handString);
+            Hand hand = Hand.parse(handString);
 
             // Then
             assertThat(hand.getCards()).hasSize(5);
@@ -44,7 +44,7 @@ class Story1_ParseAndValidateCardsTest {
         @DisplayName("Given various valid hand formats, when parsed, then successfully creates hand")
         void givenVariousValidFormats_whenParsed_thenSuccessfullyCreatesHand(String handString) {
             // When
-            Hand hand = HandParser.parseHand(handString);
+            Hand hand = Hand.parse(handString);
 
             // Then
             assertThat(hand.getCards()).hasSize(5);
@@ -64,7 +64,7 @@ class Story1_ParseAndValidateCardsTest {
         @DisplayName("Given duplicate cards, when parsing, then fails with validation error")
         void givenDuplicateCards_whenParsing_thenFailsWithValidationError(String handString, String expectedMessage) {
             // When / Then
-            assertThatThrownBy(() -> HandParser.parseHand(handString))
+            assertThatThrownBy(() -> Hand.parse(handString))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(expectedMessage);
         }
@@ -85,7 +85,7 @@ class Story1_ParseAndValidateCardsTest {
         @DisplayName("Given malformed tokens, when parsing, then fails with clear error message")
         void givenMalformedTokens_whenParsing_thenFailsWithClearErrorMessage(String handString, String expectedMessage) {
             // When / Then
-            assertThatThrownBy(() -> HandParser.parseHand(handString))
+            assertThatThrownBy(() -> Hand.parse(handString))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(expectedMessage);
         }
@@ -99,7 +99,7 @@ class Story1_ParseAndValidateCardsTest {
         @DisplayName("Given wrong number of cards, when parsing, then fails with validation error")
         void givenWrongNumberOfCards_whenParsing_thenFailsWithValidationError(String handString) {
             // When / Then
-            assertThatThrownBy(() -> HandParser.parseHand(handString))
+            assertThatThrownBy(() -> Hand.parse(handString))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("5 cards");
         }
@@ -108,7 +108,7 @@ class Story1_ParseAndValidateCardsTest {
         @DisplayName("Given empty string, when parsing, then fails with validation error")
         void givenEmptyString_whenParsing_thenFailsWithValidationError() {
             // When / Then
-            assertThatThrownBy(() -> HandParser.parseHand(""))
+            assertThatThrownBy(() -> Hand.parse(""))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("empty");
         }

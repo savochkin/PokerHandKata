@@ -2,6 +2,7 @@ package org.example.poker;
 
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,5 +38,28 @@ public class Hand {
             sb.append(cards.get(i));
         }
         return sb.toString();
+    }
+
+    public static Hand parse(String handString) {
+        if (handString == null || handString.trim().isEmpty()) {
+            throw new IllegalArgumentException("Hand string cannot be empty");
+        }
+        
+        String[] tokens = handString.trim().split("\\s+");
+        
+        if (tokens.length != 5) {
+            throw new IllegalArgumentException("A hand must contain exactly 5 cards, got " + tokens.length);
+        }
+        
+        List<Card> cards = new ArrayList<>();
+        for (String token : tokens) {
+            try {
+                cards.add(Card.parse(token));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid card token: " + token + " - " + e.getMessage(), e);
+            }
+        }
+        
+        return new Hand(cards);
     }
 }

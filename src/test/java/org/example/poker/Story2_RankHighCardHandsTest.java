@@ -17,7 +17,7 @@ class Story2_RankHighCardHandsTest {
         @DisplayName("Given 'AH KD 9C 7D 4S', when ranked, then returns HighCard with kickers [A,K,9,7,4]")
         void givenHighCardHand_whenRanked_thenReturnsHighCardWithKickers() {
             // Given
-            Hand hand = HandParser.parseHand("AH KD 9C 7D 4S");
+            Hand hand = Hand.parse("AH KD 9C 7D 4S");
 
             // When
             // HandRank rank = HandRanker.rank(hand);
@@ -35,7 +35,7 @@ class Story2_RankHighCardHandsTest {
         @DisplayName("Given '2H 3D 5C 9S JD', when ranked, then returns HighCard with kickers [J,9,5,3,2]")
         void givenAnotherHighCardHand_whenRanked_thenReturnsHighCardWithSortedKickers() {
             // Given
-            Hand hand = HandParser.parseHand("2H 3D 5C 9S JD");
+            Hand hand = Hand.parse("2H 3D 5C 9S JD");
 
             // When
             // HandRank rank = HandRanker.rank(hand);
@@ -58,8 +58,8 @@ class Story2_RankHighCardHandsTest {
         @DisplayName("Given two High Card hands, when comparing, then higher top card wins")
         void givenTwoHighCardHands_whenComparing_thenHigherTopCardWins() {
             // Given
-            Hand handA = HandParser.parseHand("AH KD 9C 7D 4S");
-            Hand handB = HandParser.parseHand("KH QD 9C 7D 4S");
+            Hand handA = Hand.parse("AH KD 9C 7D 4S");
+            Hand handB = Hand.parse("KH QD 9C 7D 4S");
 
             // When
             // int result = HandComparator.compare(handA, handB);
