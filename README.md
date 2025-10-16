@@ -81,6 +81,21 @@ Parse poker hand strings and validate that they represent valid 5-card hands.
 5. Implement validation in `Rank.fromSymbol()` and `Suit.fromSymbol()`
 6. Run tests - they should pass
 
+### Task 3: Refactor to Lombok (Refactoring Practice)
+1. Find all classes with `TODO: Task 3` comments:
+   - `Card.java` - Has manual getters, constructor, equals/hashCode
+   - `Rank.java` - Has manual constructor and getters
+   - `Suit.java` - Has manual constructor and getter
+2. **Refactor each class** to use Lombok annotations:
+   - Replace manual getters with `@Getter`
+   - Replace manual constructors with `@AllArgsConstructor` (enums) or `@Builder` (Card)
+   - Replace manual equals/hashCode with `@EqualsAndHashCode` (Card only)
+3. **Remove the boilerplate code** (getters, constructors, equals, hashCode)
+4. Run tests - they should still pass (refactoring shouldn't break tests!)
+5. Update `Card.parse()` to use builder pattern: `Card.builder().rank(...).suit(...).build()`
+
+**Important:** This is a refactoring task - the behavior must not change, only the implementation!
+
 ## 🛠️ Technical Requirements
 
 ### Required Technologies
@@ -213,6 +228,7 @@ By completing this kata, you will:
 - [x] Reject empty input
 - [ ] **Task 1:** Reject duplicate cards (implement validation)
 - [ ] **Task 2:** Reject invalid symbols (write tests + implement)
+- [ ] **Task 3:** Refactor to Lombok (remove boilerplate)
 
 ## 🔄 TDD Workflow
 
@@ -225,6 +241,13 @@ By completing this kata, you will:
 1. **Red** - Write failing tests first
 2. **Green** - Implement minimal code to pass
 3. **Refactor** - Clean up both tests and implementation
+
+### Task 3: Refactoring Discipline
+1. **Green** - Ensure all tests pass before refactoring
+2. **Refactor** - Change implementation without changing behavior
+3. **Green** - Verify all tests still pass after refactoring
+
+**Key principle:** Tests protect you during refactoring!
 
 ## 💡 Tips
 
@@ -260,10 +283,11 @@ By completing this kata, you will:
 ## 🎯 Success Criteria
 
 You've completed the kata when:
-- ✅ All tests are passing (including Task 1)
-- ✅ You've written tests for Task 2 (invalid symbols)
-- ✅ Task 2 implementation makes all tests pass
-- ✅ Code is clean and follows the technical requirements
+- ✅ **Task 1:** All tests passing (duplicate validation implemented)
+- ✅ **Task 2:** Tests written and implementation complete (invalid symbols)
+- ✅ **Task 3:** All boilerplate removed, Lombok annotations applied
+- ✅ Code is clean and follows all technical requirements
+- ✅ Tests still pass after Task 3 refactoring
 - ✅ No compilation errors or warnings
 
 ---

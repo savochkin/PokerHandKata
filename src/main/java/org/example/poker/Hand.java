@@ -23,7 +23,7 @@ public class Hand {
     }
 
     public boolean containsCard(Rank rank, Suit suit) {
-        Card searchCard = Card.builder().rank(rank).suit(suit).build();
+        Card searchCard = new Card(rank, suit);
         return cards.contains(searchCard);
     }
 

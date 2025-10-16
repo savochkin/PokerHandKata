@@ -1,15 +1,38 @@
 package org.example.poker;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import java.util.Objects;
 
-@Getter
-@Builder
-@EqualsAndHashCode
+// TODO: Task 3 - Refactor to use Lombok annotations
+// Remove boilerplate code and add: @Getter, @Builder, @EqualsAndHashCode
 public class Card {
     private final Rank rank;
     private final Suit suit;
+
+    public Card(Rank rank, Suit suit) {
+        this.rank = rank;
+        this.suit = suit;
+    }
+
+    public Rank getRank() {
+        return rank;
+    }
+
+    public Suit getSuit() {
+        return suit;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Card card = (Card) o;
+        return rank == card.rank && suit == card.suit;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(rank, suit);
+    }
 
     @Override
     public String toString() {
@@ -24,9 +47,6 @@ public class Card {
         char rankChar = cardString.charAt(0);
         char suitChar = cardString.charAt(1);
 
-        return Card.builder()
-                .rank(Rank.fromSymbol(rankChar))
-                .suit(Suit.fromSymbol(suitChar))
-                .build();
+        return new Card(Rank.fromSymbol(rankChar), Suit.fromSymbol(suitChar));
     }
 }

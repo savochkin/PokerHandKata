@@ -1,10 +1,7 @@
 package org.example.poker;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
+// TODO: Task 3 - Refactor to use Lombok annotations
+// Add: @Getter, @AllArgsConstructor
 public enum Suit {
     CLUBS('C'),
     DIAMONDS('D'),
@@ -12,6 +9,14 @@ public enum Suit {
     SPADES('S');
 
     private final char symbol;
+
+    Suit(char symbol) {
+        this.symbol = symbol;
+    }
+
+    public char getSymbol() {
+        return symbol;
+    }
 
     public static Suit fromSymbol(char symbol) {
         for (Suit suit : values()) {
