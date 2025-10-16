@@ -1,8 +1,10 @@
 package org.example.poker;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public enum Rank {
     TWO('2', 2),
     THREE('3', 3),
@@ -20,11 +22,6 @@ public enum Rank {
 
     private final char symbol;
     private final int value;
-
-    Rank(char symbol, int value) {
-        this.symbol = symbol;
-        this.value = value;
-    }
 
     public static Rank fromSymbol(char symbol) {
         for (Rank rank : values()) {

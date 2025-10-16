@@ -1,8 +1,10 @@
 package org.example.poker;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public enum Suit {
     CLUBS('C'),
     DIAMONDS('D'),
@@ -10,10 +12,6 @@ public enum Suit {
     SPADES('S');
 
     private final char symbol;
-
-    Suit(char symbol) {
-        this.symbol = symbol;
-    }
 
     public static Suit fromSymbol(char symbol) {
         for (Suit suit : values()) {
