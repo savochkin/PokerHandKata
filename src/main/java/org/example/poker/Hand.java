@@ -1,17 +1,20 @@
 package org.example.poker;
 
+import lombok.Builder;
 import lombok.Getter;
+import lombok.Singular;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Getter
+@Builder
 public class Hand {
+    @Singular
     private final List<Card> cards;
 
-    public Hand(List<Card> cards) {
+    private void validate() {
         if (cards.size() != 5) {
             throw new IllegalArgumentException("A hand must contain exactly 5 cards, got " + cards.size());
         }
@@ -21,12 +24,10 @@ public class Hand {
         if (uniqueCards.size() != 5) {
             throw new IllegalArgumentException("Hand contains duplicate cards");
         }
-        
-        this.cards = List.copyOf(cards);
     }
 
     public boolean containsCard(Rank rank, Suit suit) {
-        Card searchCard = new Card(rank, suit);
+        Card searchCard = Card.builder().rank(rank).suit(suit).build();
         return cards.contains(searchCard);
     }
 
@@ -51,15 +52,17 @@ public class Hand {
             throw new IllegalArgumentException("A hand must contain exactly 5 cards, got " + tokens.length);
         }
         
-        List<Card> cards = new ArrayList<>();
+        HandBuilder builder = Hand.builder();
         for (String token : tokens) {
             try {
-                cards.add(Card.parse(token));
+                builder.card(Card.parse(token));
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Invalid card token: " + token + " - " + e.getMessage(), e);
             }
         }
         
-        return new Hand(cards);
+        Hand hand = builder.build();
+        hand.validate();
+        return hand;
     }
 }

@@ -1,11 +1,11 @@
 package org.example.poker;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@Builder
 @EqualsAndHashCode
 public class Card {
     private final Rank rank;
@@ -23,10 +23,10 @@ public class Card {
         
         char rankChar = cardString.charAt(0);
         char suitChar = cardString.charAt(1);
-        
-        Rank rank = Rank.fromSymbol(rankChar);
-        Suit suit = Suit.fromSymbol(suitChar);
-        
-        return new Card(rank, suit);
+
+        return Card.builder()
+                .rank(Rank.fromSymbol(rankChar))
+                .suit(Suit.fromSymbol(suitChar))
+                .build();
     }
 }
