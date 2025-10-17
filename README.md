@@ -202,10 +202,8 @@ mvn test
 **Hint:** Use a `Set` to detect duplicates
 
 **💬 Discussion Points:**
-- Why use a `Set` for duplicate detection? What's the time complexity?
-- How does `Card.equals()` and `hashCode()` enable Set-based detection?
-- What happens if you forget to implement `equals()` and `hashCode()`?
-- Could you solve this without a Set? What would be the trade-offs?
+- How did having the tests already written help guide your implementation?
+- Did you feel confident the implementation was correct? Why?
 
 ### Task 2: Write Tests for Invalid Symbols (TDD)
 1. Open `src/test/java/org/example/poker/RejectWrongInputsTest.java`
@@ -219,11 +217,8 @@ mvn test
 6. Run tests - they should pass
 
 **💬 Discussion Points:**
-- How did writing tests first change your approach compared to Task 1?
-- Did the tests help you think about edge cases before implementing?
-- What's the difference between test-first and test-last TDD?
-- How confident are you that your implementation is correct? Why?
-- What would happen if you wrote the implementation first?
+- How was creating your own tests different from using existing tests (Task 1)?
+- Did writing tests help you think about edge cases before implementing?
 
 ### Task 3: Refactor to Lombok (Refactoring Practice)
 1. Find all classes with `TODO: Task 3` comments:
@@ -241,12 +236,8 @@ mvn test
 **Important:** This is a refactoring task - the behavior must not change, only the implementation!
 
 **💬 Discussion Points:**
-- How many lines of code did you remove? (Hint: ~30+ lines!)
+- How many lines of code did you remove?
 - Did the tests give you confidence during refactoring?
-- What would happen if you didn't have tests before refactoring?
-- Compare `Card` before and after - which is easier to read and maintain?
-- What are the benefits of using `@Builder` vs a regular constructor?
-- When would you NOT want to use Lombok?
 
 ### Task 4: Use Parameterized Tests (Test Refactoring)
 1. Open `src/test/java/org/example/poker/ParseAndValidateWellFormedInputTest.java`
@@ -263,11 +254,7 @@ mvn test
 **Goal:** Reduce code duplication and make tests more maintainable!
 
 **💬 Discussion Points:**
-- How many test methods did you reduce from 4 to 1?
-- Is it easier to add new test cases now? Try adding one!
-- What's the trade-off between individual tests and parameterized tests?
-- When would you prefer individual tests over parameterized ones?
-- How does this relate to the DRY (Don't Repeat Yourself) principle?
+- Is it easier to add new test cases now?
 - Did you maintain the same test coverage after refactoring?
 
 ## 📁 Project Structure
