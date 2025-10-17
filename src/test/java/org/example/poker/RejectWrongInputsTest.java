@@ -68,6 +68,20 @@ class RejectWrongInputsTest {
     //
     // Write your test here:
 
+    @ParameterizedTest
+    @CsvSource({
+            "1H AH 3C TD 9S, invalid rank",
+            "XH AH 3C TD 9S, invalid rank",
+            "BH AH 3C TD 9S, invalid rank",
+    })
+    @DisplayName("Given invalid ranked cards, when parsing, then fails with validation error")
+    void givenInvalidCards_whenParsing_thenFailsWithValidationError(String handString, String expectedMessage) {
+        // When / Then
+        assertThatThrownBy(() -> Hand.parse(handString))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(expectedMessage);
+    }
+
 
     // TODO: Task 2 - Write tests for invalid suit symbols
     //

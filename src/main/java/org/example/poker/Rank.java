@@ -40,7 +40,15 @@ public enum Rank {
             }
         }
         // TODO: Task 2 - Handle invalid rank symbols
-        // Should throw IllegalArgumentException with message containing "Invalid rank"
+        int flag = 0;
+        for (Rank rank : values()) {
+            if (rank.symbol == symbol) {
+                flag =1;
+                break;
+            }
+        }
+        if(flag == 0)
+            throw new IllegalArgumentException("invalid rank");
         return null;
     }
 }
