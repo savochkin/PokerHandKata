@@ -1,16 +1,26 @@
 package org.example.poker;
 
 import lombok.Builder;
-import lombok.Getter;
 import lombok.Singular;
 
+import java.util.Collections;
 import java.util.List;
 
-@Getter
 @Builder
 public class Hand {
     @Singular
     private final List<Card> cards;
+
+    /**
+     * Returns the cards in this hand.
+     * 
+     * TODO: Task 5 - Fix immutability violation
+     * Currently returns a mutable list, allowing external code to modify the hand's cards.
+     * Wrap the return value with Collections.unmodifiableList() to prevent modification.
+     */
+    public List<Card> getCards() {
+        return cards;
+    }
 
     private void validate() {
         if (cards.size() != 5) {

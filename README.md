@@ -143,9 +143,9 @@ void testName() {
 - Method names: `givenX_whenY_thenZ()`
 - Display names: `@DisplayName("Given [context], when [action], then [outcome]")`
 
-**7. Immutable Objects**
+**7. Immutable Objects** ⚠️ **Task 5**
 - All fields should be `final`
-- Use `List.copyOf()` for defensive copying
+- Return unmodifiable collections from getters
 - No setters (use builders instead)
 
 ## 🚀 Getting Started
@@ -257,6 +257,26 @@ mvn test
 - Is it easier to add new test cases now?
 - Did you maintain the same test coverage after refactoring?
 
+### Task 5: Ensure Immutability (TDD)
+1. Open `src/test/java/org/example/poker/ImmutabilityTest.java`
+2. Find the `TODO: Task 5` comment
+3. **Write tests first** for:
+   - Attempting to clear the cards list via `getCards().clear()` should throw `UnsupportedOperationException`
+   - Attempting to add a card via `getCards().add()` should throw `UnsupportedOperationException`
+   - Attempting to remove a card via `getCards().remove()` should throw `UnsupportedOperationException`
+4. Run tests - they should fail (the list is currently mutable)
+5. Open `src/main/java/org/example/poker/Hand.java`
+6. Find the `getCards()` method with `TODO: Task 5`
+7. Wrap the return value with `Collections.unmodifiableList(cards)`
+8. Run tests - they should pass
+
+**Goal:** Prevent external code from modifying internal state!
+
+**💬 Discussion Points:**
+- Why is returning a mutable collection a problem?
+- How does `Collections.unmodifiableList()` protect immutability?
+- What happens if you try to modify the unmodifiable list?
+
 ## 📁 Project Structure
 
 ```
@@ -292,6 +312,7 @@ By completing this kata, you will:
 - [ ] **Task 2:** Reject invalid symbols (write tests + implement)
 - [ ] **Task 3:** Refactor to Lombok (remove boilerplate)
 - [ ] **Task 4:** Use parameterized tests (reduce duplication)
+- [ ] **Task 5:** Ensure immutability (write tests + fix implementation)
 
 ## 🔄 TDD Workflow
 
@@ -318,6 +339,13 @@ By completing this kata, you will:
 3. **Green** - Verify all tests still pass (fewer tests, same coverage)
 
 **Key principle:** Tests can be refactored too! Reduce duplication without losing coverage.
+
+### Task 5: Test-First TDD (Immutability)
+1. **Red** - Write failing tests for immutability violations
+2. **Green** - Fix implementation to return unmodifiable collections
+3. **Refactor** - Ensure the solution is clean and minimal
+
+**Key principle:** Immutability prevents bugs by making objects safe to share!
 
 ## 💡 Tips
 
@@ -360,10 +388,11 @@ You've completed the kata when:
 - ✅ **Task 2:** Tests written and implementation complete (invalid symbols)
 - ✅ **Task 3:** All boilerplate removed, Lombok annotations applied
 - ✅ **Task 4:** Individual tests refactored into parameterized test
+- ✅ **Task 5:** Immutability tests written and implementation fixed
 - ✅ Code is clean and follows all technical requirements
 - ✅ Tests still pass after all refactoring tasks
 - ✅ No compilation errors or warnings
-- ✅ Test count reduced from 12 to 9 (same coverage, less duplication)
+- ✅ All collections returned from getters are unmodifiable
 
 ---
 
