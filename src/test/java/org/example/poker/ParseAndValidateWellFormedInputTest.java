@@ -2,6 +2,8 @@ package org.example.poker;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -26,45 +28,17 @@ class ParseAndValidateWellFormedInputTest {
         assertThat(hand.containsCard(Rank.NINE, Suit.SPADES)).isTrue();
     }
 
-    // TODO: Task 4 - Refactor these individual tests into a single parameterized test
-    // Hint: Use @ParameterizedTest with @ValueSource(strings = {...})
-    // Hint: Look at RejectWrongInputsTest for examples of parameterized tests
-    
-    @Test
-    @DisplayName("Given '2H 3D 5S 9C KD', when parsed, then successfully creates hand")
-    void givenValidHand1_whenParsed_thenSuccessfullyCreatesHand() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "2H 3D 5S 9C KD",
+            "AH KD 3C TD 9S",
+            "AS KS QS JS TS",
+            "2C 2D 2H 2S 3C"
+    })
+    @DisplayName("Given valid hand string, when parsed, then successfully creates hand with 5 cards")
+    void givenValidHandString_whenParsed_thenSuccessfullyCreatesHandWith5Cards(String handString) {
         // When
-        Hand hand = Hand.parse("2H 3D 5S 9C KD");
-
-        // Then
-        assertThat(hand.getCards()).hasSize(5);
-    }
-
-    @Test
-    @DisplayName("Given 'AH KD 3C TD 9S', when parsed, then successfully creates hand")
-    void givenValidHand2_whenParsed_thenSuccessfullyCreatesHand() {
-        // When
-        Hand hand = Hand.parse("AH KD 3C TD 9S");
-
-        // Then
-        assertThat(hand.getCards()).hasSize(5);
-    }
-
-    @Test
-    @DisplayName("Given 'AS KS QS JS TS', when parsed, then successfully creates hand")
-    void givenValidHand3_whenParsed_thenSuccessfullyCreatesHand() {
-        // When
-        Hand hand = Hand.parse("AS KS QS JS TS");
-
-        // Then
-        assertThat(hand.getCards()).hasSize(5);
-    }
-
-    @Test
-    @DisplayName("Given '2C 2D 2H 2S 3C', when parsed, then successfully creates hand")
-    void givenValidHand4_whenParsed_thenSuccessfullyCreatesHand() {
-        // When
-        Hand hand = Hand.parse("2C 2D 2H 2S 3C");
+        Hand hand = Hand.parse(handString);
 
         // Then
         assertThat(hand.getCards()).hasSize(5);
