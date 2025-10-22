@@ -24,8 +24,6 @@ public enum Suit {
                 return suit;
             }
         }
-        // TODO: Task 2 - Handle invalid suit symbols
-        // Should throw IllegalArgumentException with message containing "Invalid suit"
-        return null;
+        throw new IllegalArgumentException("Invalid suit symbol: " + symbol);
     }
 }
