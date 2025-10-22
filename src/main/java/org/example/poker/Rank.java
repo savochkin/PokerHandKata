@@ -1,7 +1,10 @@
 package org.example.poker;
 
-// TODO: Task 3 - Refactor to use Lombok annotations
-// Add: @Getter, @AllArgsConstructor
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
 public enum Rank {
     TWO('2', 2),
     THREE('3', 3),
@@ -19,19 +22,6 @@ public enum Rank {
 
     private final char symbol;
     private final int value;
-
-    Rank(char symbol, int value) {
-        this.symbol = symbol;
-        this.value = value;
-    }
-
-    public char getSymbol() {
-        return symbol;
-    }
-
-    public int getValue() {
-        return value;
-    }
 
     public static Rank fromSymbol(char symbol) {
         for (Rank rank : values()) {
