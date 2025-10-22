@@ -2,13 +2,16 @@ package org.example.poker;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.*;
+
 @DisplayName("Story 1 - Task 2: Reject Wrong Input")
 class RejectWrongInputsTest {
 
     @ParameterizedTest
+    @NullSource
     @ValueSource(strings = {
             "",                     // empty string
             "AH KD 3C TD",          // wrong number: 4 cards
