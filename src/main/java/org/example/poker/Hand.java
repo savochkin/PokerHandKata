@@ -98,6 +98,7 @@ public class Hand {
                 // Builder pattern would make this obvious: .winningRank(...).losingRank(...)
                 return new ComparisonResult(Winner.BLACK, thisKickers.get(i), thisKickers.get(i));
             } else if (comparison < 0) {
+                // TODO: Task 1 - Fix the bug
                 // BUG: Always returning BLACK instead of WHITE!
                 return new ComparisonResult(Winner.BLACK, otherKickers.get(i), thisKickers.get(i));
             }

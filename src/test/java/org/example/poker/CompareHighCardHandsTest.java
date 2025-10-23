@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CompareHighCardHandsTest {
 
-    // TODO: Task 2 - Write a test for when White wins
+    // TODO: Task 1 - Write a test for when White wins
     // Bug report: "When White wins, the system incorrectly reports that Black wins!"
     // OPTIONAL: First run tests with coverage - notice the "else if (comparison < 0)" branch in Hand.compare() is not covered!
     // Test case: Black: "2H 3D 5S 9C KD", White: "2C 3H 4S 8C AH"
@@ -18,7 +18,7 @@ class CompareHighCardHandsTest {
     // Notice how many tests follow the same pattern?
     // Consider consolidating them using @ParameterizedTest and @CsvSource
 
-    // TODO: Task 5 - Write a test for losingRank bug
+    // TODO: Task 4 - Write a test for losingRank bug
     // Bug report: "The losingRank in ComparisonResult is sometimes incorrect!"
     // Write a test that checks both getWinningRank() and getLosingRank()
     // Test case: Black "AH KD 9C 7D 4S" vs White "AH KD 9C 7D 3S"
@@ -82,7 +82,7 @@ class CompareHighCardHandsTest {
         assertThat(result.describe()).isEqualTo("Black wins - high card: King");
     }
 
-    // TODO: Task 6 - Write tests for immutability
+    // TODO: Task 5 - Write tests for immutability
     // Bug report: "We're seeing incorrect comparison results! Sometimes a hand that should win is losing."
     // Investigation: Client code was modifying the cards list: hand.getCards().clear()
     // This breaks comparison logic because the hand becomes empty!
