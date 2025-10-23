@@ -253,17 +253,66 @@ public List<Card> getCards() {
 - Behavioral tests are more resilient and provide better confidence
 
 **Your Mission:**
+
+**Step 1: Remove Implementation Tests**
 1. Open `Hand.java` and change `rank()` from `public` to `private`
 2. Delete the entire `HandRankTest.java` file
 3. Run remaining tests - they should all still pass
 4. (Optional) Run tests with coverage - observe that `rank()` is still 100% covered through the `compare()` method calls in `CompareHighCardHandsTest`
-5. Key takeaway: The behavioral tests give us confidence without testing implementation details, and we haven't lost any coverage!
+
+**Step 2: Demonstrate the Benefit - Refactor HandRank to a Record**
+
+Now that we don't have brittle implementation tests, let's do a refactoring that would have broken them:
+
+1. Open `HandRank.java`
+2. Convert the class to a modern Java record:
+   ```java
+   public record HandRank(Category category, List<Rank> kickers) {}
+   ```
+3. Delete all the boilerplate (constructor, getters, fields)
+4. Run tests - they should all still pass!
+
+**Observation:** If we still had `HandRankTest`, this refactoring might have broken it (depending on how the test was written). But our behavioral tests in `CompareHighCardHandsTest` don't care about the internal structure - they only care that comparisons work correctly!
 
 **Key Insight:** 
-- ❌ **Implementation test:** Calls `hand.rank()` and checks `rank.getKickers().containsExactly(ACE, KING...)`
-- ✅ **Behavioral test:** Calls `black.compare(white)` and checks `result.describe().equals("White wins - high card: Ace")`
+- ❌ **Implementation test:** Calls `hand.rank()` and checks `rank.getKickers().containsExactly(ACE, KING...)` - brittle, breaks on internal changes
+- ✅ **Behavioral test:** Calls `black.compare(white)` and checks `result.describe().equals("White wins - high card: Ace")` - resilient, only breaks when behavior changes
 
-The behavioral tests verify the system works correctly without coupling to internal structure. By making `rank()` private, we enforce that clients use the public API (`compare()`) instead of implementation details.
+**Follow-up Discussion: What other refactorings would break implementation tests?**
+
+Consider these scenarios where behavioral tests would remain green but implementation tests might break:
+
+1. **Change kickers storage from List to Array:**
+   ```java
+   // Store as array internally, convert to list in getter
+   private Rank[] kickers;
+   public List<Rank> getKickers() { return Arrays.asList(kickers); }
+   ```
+   Implementation tests checking list type would break, but behavior is unchanged.
+
+2. **Change kickers sort order (ascending instead of descending):**
+   ```java
+   // Sort ascending, then reverse during comparison
+   List<Rank> kickers = cards.stream()
+       .sorted(Comparator.comparingInt(Rank::getValue)) // ascending
+   ```
+   Tests checking exact order would break, but comparison logic still works.
+
+3. **Inline the rank() method entirely:**
+   Remove `rank()` and `HandRank`, do comparison directly in `compare()`.
+   All tests calling `rank()` would break, but comparison behavior is unchanged.
+
+4. **Add caching/memoization:**
+   ```java
+   private HandRank cachedRank;
+   private HandRank rank() {
+       if (cachedRank == null) cachedRank = calculateRank();
+       return cachedRank;
+   }
+   ```
+   Tests expecting fresh objects would break, but behavior is unchanged.
+
+**Key Lesson:** Behavioral tests give you the freedom to refactor implementation details without breaking tests. This is crucial for maintaining a healthy, evolvable codebase!
 
 ## 🛠️ Technical Requirements
 
