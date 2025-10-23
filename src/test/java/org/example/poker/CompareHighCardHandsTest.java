@@ -14,10 +14,6 @@ class CompareHighCardHandsTest {
     // Write the test first, see it fail, then fix the bug in Hand.compare() line ~104
     // Key lesson: Code coverage helps identify untested paths where bugs hide
 
-    // TODO: Task 4 - Refactor these tests into parameterized tests
-    // Notice how many tests follow the same pattern?
-    // Consider consolidating them using @ParameterizedTest and @CsvSource
-
     // TODO: Task 2 - Write a test for losingRank bug
     // Bug report: "The losingRank in ComparisonResult is sometimes incorrect!"
     // Write a test that checks both getWinningRank() and getLosingRank()
@@ -25,6 +21,21 @@ class CompareHighCardHandsTest {
     // Expected: winningRank=FOUR, losingRank=THREE
     // The test will fail, exposing the bug in Hand.compare()
     // After fixing the bug, refactor to use builder pattern to prevent similar bugs
+
+    // TODO: Task 4 - Refactor these tests into parameterized tests
+    // Notice how many tests follow the same pattern?
+    // Consider consolidating them using @ParameterizedTest and @CsvSource
+
+    // TODO: Task 5 - Write tests for immutability
+    // Bug report: "We're seeing incorrect comparison results! Sometimes a hand that should win is losing."
+    // Investigation: Client code was modifying the cards list: hand.getCards().clear()
+    // This breaks comparison logic because the hand becomes empty!
+    // Your task: Write tests that try to modify the cards list (clear(), add(), remove())
+    // Tests should expect UnsupportedOperationException
+    // Then fix Hand.getCards() to return an unmodifiable list
+    // Hint: Override Lombok's generated getter with Collections.unmodifiableList()
+    // Key lesson: Protect internal state by returning unmodifiable collections!
+
 
     @Test
     void shouldReturnTieWhenAllKickersAreEqual() {
@@ -81,14 +92,4 @@ class CompareHighCardHandsTest {
         assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
         assertThat(result.describe()).isEqualTo("Black wins - high card: King");
     }
-
-    // TODO: Task 3 - Write tests for immutability
-    // Bug report: "We're seeing incorrect comparison results! Sometimes a hand that should win is losing."
-    // Investigation: Client code was modifying the cards list: hand.getCards().clear()
-    // This breaks comparison logic because the hand becomes empty!
-    // Your task: Write tests that try to modify the cards list (clear(), add(), remove())
-    // Tests should expect UnsupportedOperationException
-    // Then fix Hand.getCards() to return an unmodifiable list
-    // Hint: Override Lombok's generated getter with Collections.unmodifiableList()
-    // Key lesson: Protect internal state by returning unmodifiable collections!
 }
