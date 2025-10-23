@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 @Getter
 @Builder
 public class Hand {
-    @Singular
     private final List<Card> cards;
 
     private void validate() {
@@ -54,16 +53,16 @@ public class Hand {
             throw new IllegalArgumentException("A hand must contain exactly 5 cards, got " + tokens.length);
         }
         
-        HandBuilder builder = Hand.builder();
+        List<Card> cardList = new java.util.ArrayList<>();
         for (String token : tokens) {
             try {
-                builder.card(Card.parse(token));
+                cardList.add(Card.parse(token));
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Invalid card token: " + token + " - " + e.getMessage(), e);
             }
         }
         
-        Hand hand = builder.build();
+        Hand hand = Hand.builder().cards(cardList).build();
         hand.validate();
         return hand;
     }
