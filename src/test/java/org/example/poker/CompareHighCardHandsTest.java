@@ -6,14 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CompareHighCardHandsTest {
 
-    // TODO: Task 1 - Remove implementation-tied tests
-    // The two tests below (shouldRankHighCardHandWithKickersSortedDescending and 
-    // shouldRankAnotherHighCardHandWithKickersSortedDescending) test internal HandRank structure.
-    // They are tied to implementation details, not observable behavior.
-    // Delete both tests and observe that the comparison tests still give us confidence.
-    // Lesson: Behavioral tests (checking comparison results) are more resilient to refactoring
-    // than implementation tests (checking internal HandRank structure).
-
     // TODO: Task 2 - Write a test for when White wins
     // Bug report: "When White wins, the system incorrectly reports that Black wins!"
     // OPTIONAL: First run tests with coverage - notice the "else if (comparison < 0)" branch in Hand.compare() is not covered!
@@ -33,36 +25,6 @@ class CompareHighCardHandsTest {
     // Expected: winningRank=FOUR, losingRank=THREE
     // The test will fail, exposing the bug in Hand.compare()
     // After fixing the bug, refactor to use builder pattern to prevent similar bugs
-
-    @Test
-    void shouldRankHighCardHandWithKickersSortedDescending() {
-        // Given
-        Hand hand = Hand.parse("AH KD 9C 7D 4S");
-        
-        // When
-        HandRank rank = hand.rank();
-        
-        // Then
-        assertThat(rank.getCategory()).isEqualTo(Category.HIGH_CARD);
-        assertThat(rank.getKickers()).containsExactly(
-            Rank.ACE, Rank.KING, Rank.NINE, Rank.SEVEN, Rank.FOUR
-        );
-    }
-
-    @Test
-    void shouldRankAnotherHighCardHandWithKickersSortedDescending() {
-        // Given
-        Hand hand = Hand.parse("2H 3D 5C 9S JD");
-        
-        // When
-        HandRank rank = hand.rank();
-        
-        // Then
-        assertThat(rank.getCategory()).isEqualTo(Category.HIGH_CARD);
-        assertThat(rank.getKickers()).containsExactly(
-            Rank.JACK, Rank.NINE, Rank.FIVE, Rank.THREE, Rank.TWO
-        );
-    }
 
     @Test
     void shouldReturnTieWhenAllKickersAreEqual() {

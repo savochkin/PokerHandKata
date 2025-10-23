@@ -22,30 +22,7 @@ By completing these tasks, you will practice:
 
 ## 📋 The Tasks
 
-### Task 1: Remove Implementation-Tied Tests (Behavioral Testing)
-
-**Problem:** The test class has tests that check internal implementation details (`HandRank` structure) rather than observable behavior (comparison results).
-
-**Why this matters:** Implementation-tied tests break when you refactor internal code, even if behavior stays correct. Behavioral tests are more resilient.
-
-**Your Mission:**
-1. Open `CompareHighCardHandsTest.java`
-2. Find the two tests that check `HandRank` internals:
-   - `shouldRankHighCardHandWithKickersSortedDescending()`
-   - `shouldRankAnotherHighCardHandWithKickersSortedDescending()`
-3. **Delete both tests**
-4. Run remaining tests - they should all still pass
-5. Observe: The comparison tests (behavioral) give us confidence without testing implementation details
-
-**Key Insight:** 
-- ❌ **Implementation test:** Checks `rank.getKickers().containsExactly(ACE, KING...)`
-- ✅ **Behavioral test:** Checks `result.describe().equals("White wins - high card: Ace")`
-
-The behavioral tests verify the system works correctly without coupling to internal structure.
-
----
-
-### Task 2: Fix the Bug - White Wins Reported as Black Wins (TDD)
+### Task 1: Fix the Bug - White Wins Reported as Black Wins (TDD)
 
 **Problem:** You received a bug report: *"When White wins, the system incorrectly reports that Black wins!"*
 
@@ -93,7 +70,7 @@ void shouldReportWhiteWinsWhenWhiteHasHigherCard() {
 
 ---
 
-### Task 3: Refactor Tests - Reduce Duplication with Parameterized Tests
+### Task 2: Refactor Tests - Reduce Duplication with Parameterized Tests
 
 **Problem:** The test class has many similar tests that follow the same pattern, making it harder to maintain.
 
@@ -117,7 +94,7 @@ void shouldReportWhiteWinsWhenWhiteHasHigherCard() {
 
 ---
 
-### Task 4: Remove Boilerplate - Use Lombok in HandRank
+### Task 3: Remove Boilerplate - Use Lombok in HandRank
 
 **Problem:** The `HandRank` class contains boilerplate code (constructor, getters). Look at the TODO comment.
 
@@ -153,7 +130,7 @@ public class HandRank {
 
 ---
 
-### Task 5: Fix Bug & Improve Readability with Builder Pattern (TDD + Refactoring)
+### Task 4: Fix Bug & Improve Readability with Builder Pattern (TDD + Refactoring)
 
 **Problem:** Bug report: *"The losingRank in ComparisonResult is sometimes incorrect!"*
 
@@ -209,7 +186,7 @@ return new ComparisonResult(Winner.BLACK, thisKickers.get(i), thisKickers.get(i)
 
 ---
 
-### Task 6: Fix Immutability Bug - Protect Hand Cards (TDD)
+### Task 5: Fix Immutability Bug - Protect Hand Cards (TDD)
 
 **Problem:** Bug report: *"We're seeing incorrect comparison results! Sometimes a hand that should win is losing."*
 
@@ -263,6 +240,30 @@ public List<Card> getCards() {
 **Step 3: 🔵 REFACTOR** - Verify the solution is clean
 
 **Key Lesson:** Always return defensive copies or unmodifiable collections from getters to protect internal state!
+
+---
+
+### Task 6: Remove Implementation-Tied Tests (Behavioral Testing)
+
+**Problem:** The `rank()` method is currently public and has its own test class (`HandRankTest`) that checks internal implementation details (`HandRank` structure) rather than observable behavior (comparison results).
+
+**Why this matters:** 
+- The `rank()` method is an implementation detail used internally by `compare()`
+- Testing implementation details creates brittle tests that break when you refactor internal code, even if behavior stays correct
+- Behavioral tests are more resilient and provide better confidence
+
+**Your Mission:**
+1. Open `Hand.java` and change `rank()` from `public` to `private`
+2. Delete the entire `HandRankTest.java` file
+3. Run remaining tests - they should all still pass
+4. (Optional) Run tests with coverage - observe that `rank()` is still 100% covered through the `compare()` method calls in `CompareHighCardHandsTest`
+5. Key takeaway: The behavioral tests give us confidence without testing implementation details, and we haven't lost any coverage!
+
+**Key Insight:** 
+- ❌ **Implementation test:** Calls `hand.rank()` and checks `rank.getKickers().containsExactly(ACE, KING...)`
+- ✅ **Behavioral test:** Calls `black.compare(white)` and checks `result.describe().equals("White wins - high card: Ace")`
+
+The behavioral tests verify the system works correctly without coupling to internal structure. By making `rank()` private, we enforce that clients use the public API (`compare()`) instead of implementation details.
 
 ## 🛠️ Technical Requirements
 
@@ -338,8 +339,9 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 ```
 
 **Expected Initial State:**
-- ✅ 7 tests passing (2 ranking tests + 5 comparison tests)
-- ❌ Missing test for "White wins" scenario (Task 2)
+- ✅ 6 tests passing in CompareHighCardHandsTest (4 comparison tests) + HandRankTest (2 ranking tests)
+- ❌ Missing test for "White wins" scenario (Task 1)
+- ⚠️ `rank()` method is public (should be private - Task 6)
 
 ### How to Complete the Tasks
 
@@ -355,10 +357,12 @@ grep -r "TODO:" src/
 ```
 
 **Files with TODOs:**
-- `CompareHighCardHandsTest.java` - Tasks 1, 2, 3, 6
-- `HandRank.java` - Task 4
-- `Hand.java` - Task 5
-- `ComparisonResult.java` - Task 5
+- `CompareHighCardHandsTest.java` - Tasks 1, 2, 5
+- `HandRank.java` - Task 3
+- `Hand.java` - Task 4
+- `ComparisonResult.java` - Task 4
+- `Hand.java` - Task 6 (make rank() private)
+- `HandRankTest.java` - Task 6 (delete this file)
 
 ## 📁 Project Structure
 
@@ -368,36 +372,37 @@ src/
 │   ├── Card.java               # Single card (rank + suit)
 │   ├── Rank.java               # Card ranks enum (2-A)
 │   ├── Suit.java               # Card suits enum (C,D,H,S)
-│   ├── Hand.java               # 5-card hand with compare logic
+│   ├── Hand.java               # 5-card hand with compare logic - Task 4, 6
 │   ├── Category.java           # Hand categories (HIGH_CARD)
-│   ├── HandRank.java           # Ranking result (category + kickers) - Task 4
+│   ├── HandRank.java           # Ranking result (category + kickers) - Task 3
 │   ├── Winner.java             # Winner enum (BLACK, WHITE, TIE)
-│   └── ComparisonResult.java   # Comparison result with description - Task 5
+│   └── ComparisonResult.java   # Comparison result with description - Task 4
 └── test/java/org/example/poker/
-    └── CompareHighCardHandsTest.java  # Story 2 tests - Tasks 1, 2, 3, 6
+    ├── HandRankTest.java              # Implementation tests - DELETE in Task 6
+    └── CompareHighCardHandsTest.java  # Behavioral tests - Tasks 1, 2, 5
 ```
 
 ## 📊 Progress Tracking
 
-- [ ] **Task 1:** Remove implementation-tied tests (behavioral testing)
-- [ ] **Task 2:** Write test for White wins + fix bug (TDD)
-- [ ] **Task 3:** Refactor tests to parameterized tests
-- [ ] **Task 4:** Remove boilerplate from HandRank using Lombok
-- [ ] **Task 5:** Write test for losingRank bug + fix + refactor with builder (TDD + Refactoring)
-- [ ] **Task 6:** Write test for immutability + fix Hand.getCards() (TDD)
+- [ ] **Task 1:** Write test for White wins + fix bug (TDD)
+- [ ] **Task 2:** Refactor tests to parameterized tests
+- [ ] **Task 3:** Remove boilerplate from HandRank using Lombok
+- [ ] **Task 4:** Write test for losingRank bug + fix + refactor with builder (TDD + Refactoring)
+- [ ] **Task 5:** Write test for immutability + fix Hand.getCards() (TDD)
+- [ ] **Task 6:** Remove implementation-tied tests (behavioral testing)
 
 ## 🔄 TDD & Refactoring Workflow
 
-### Tasks 2, 5, 6: Test-Driven Development (TDD)
+### Tasks 1, 4, 5: Test-Driven Development (TDD)
 1. **🔴 RED** - Write a failing test first
 2. **🟢 GREEN** - Write minimal code to make it pass
 3. **🔵 REFACTOR** - Clean up the code
 
 **Key principle:** Let tests drive your implementation!
 
-**Task 5 combines TDD + Refactoring:** Write test → Fix bug → Refactor with builder
+**Task 4 combines TDD + Refactoring:** Write test → Fix bug → Refactor with builder
 
-### Tasks 1, 3, 4: Refactoring Discipline
+### Tasks 2, 3, 6: Refactoring Discipline
 1. **🟢 GREEN** - Ensure all tests pass before refactoring
 2. **🔵 REFACTOR** - Change implementation/tests without changing behavior
 3. **🟢 GREEN** - Verify all tests still pass
@@ -406,12 +411,12 @@ src/
 
 ## 💡 Tips
 
-- **Task 1:** Notice which tests check internal structure vs observable behavior
-- **Task 2:** Look at existing comparison tests for the pattern; check coverage first
-- **Task 3:** Use `@ParameterizedTest` with `@CsvSource` - check JUnit 5 docs
-- **Task 4:** Look at other classes (Card, Rank, Suit) for Lombok examples
-- **Task 5:** Write test for `getLosingRank()` first; builder makes parameters explicit
-- **Task 6:** Use `Collections.unmodifiableList()` to wrap the list; override Lombok's getter
+- **Task 1:** Look at existing comparison tests for the pattern; check coverage first
+- **Task 2:** Use `@ParameterizedTest` with `@CsvSource` - check JUnit 5 docs
+- **Task 3:** Look at other classes (Card, Rank, Suit) for Lombok examples
+- **Task 4:** Write test for `getLosingRank()` first; builder makes parameters explicit
+- **Task 5:** Use `Collections.unmodifiableList()` to wrap the list; override Lombok's getter
+- **Task 6:** Notice which tests check internal structure vs observable behavior; run with coverage to verify `rank()` is still covered
 - **Run tests frequently** - Get immediate feedback after each change
 - **Follow TODO comments** - They guide you step by step
 
@@ -443,24 +448,24 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 
 You've completed the kata when:
 - ✅ All 6 tasks completed in order
-- ✅ Implementation-tied tests removed (Task 1)
-- ✅ All tests passing (including new tests from Tasks 2 & 6)
-- ✅ Tests use parameterized tests where appropriate (Task 3)
-- ✅ HandRank uses Lombok annotations (Task 4)
-- ✅ ComparisonResult uses builder pattern (Task 5)
-- ✅ Hand.getCards() returns unmodifiable list (Task 6)
+- ✅ All tests passing (including new tests from Tasks 1, 4 & 5)
+- ✅ Tests use parameterized tests where appropriate (Task 2)
+- ✅ HandRank uses Lombok annotations (Task 3)
+- ✅ ComparisonResult uses builder pattern (Task 4)
+- ✅ Hand.getCards() returns unmodifiable list (Task 5)
+- ✅ Implementation-tied tests removed and `rank()` is private (Task 6)
 - ✅ No compilation errors or warnings
 - ✅ Code is clean and readable
 
 ## 💬 Discussion Points
 
 After completing all tasks, reflect on:
-- **Task 1:** Why are behavioral tests more resilient than implementation-tied tests?
-- **Task 2:** How did TDD help you catch bugs early?
-- **Task 3:** What are the benefits of parameterized tests?
-- **Task 4:** How much boilerplate did Lombok eliminate?
-- **Task 5:** When should you use builder pattern vs constructors?
-- **Task 6:** Why is immutability important in domain objects?
+- **Task 1:** How did TDD help you catch bugs early?
+- **Task 2:** What are the benefits of parameterized tests?
+- **Task 3:** How much boilerplate did Lombok eliminate?
+- **Task 4:** When should you use builder pattern vs constructors?
+- **Task 5:** Why is immutability important in domain objects?
+- **Task 6:** Why are behavioral tests more resilient than implementation-tied tests?
 
 ---
 
