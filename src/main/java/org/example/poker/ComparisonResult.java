@@ -3,11 +3,18 @@ package org.example.poker;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+// TODO: Task 5 - Add @Builder annotation here
+// This will make the code in Hand.compare() more readable
+// Instead of: new ComparisonResult(Winner.BLACK, rank)
+// You'll have: ComparisonResult.builder().winner(Winner.BLACK).winningRank(rank).build()
+// Don't forget to also add @AllArgsConstructor (since @Builder needs a constructor)
+
 @Getter
 @RequiredArgsConstructor
 public class ComparisonResult {
     private final Winner winner;
     private final Rank winningRank;
+    private final Rank losingRank;
     
     public String describe() {
         if (winner == Winner.TIE) {

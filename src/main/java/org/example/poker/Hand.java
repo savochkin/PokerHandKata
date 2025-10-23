@@ -94,16 +94,16 @@ public class Hand {
             );
             
             if (comparison > 0) {
-                // This hand (black) wins
-                return new ComparisonResult(Winner.BLACK, thisKickers.get(i));
+                // TODO: Task 5 - Three parameters, two of the same type (Rank)!
+                // BUG: Accidentally used thisKickers twice! Easy mistake with positional params.
+                // Builder pattern would make this obvious: .winningRank(...).losingRank(...)
+                return new ComparisonResult(Winner.BLACK, thisKickers.get(i), thisKickers.get(i));
             } else if (comparison < 0) {
-                // Other hand (white) wins
-                return new ComparisonResult(Winner.WHITE, otherKickers.get(i));
+                // BUG: Always returning BLACK instead of WHITE!
+                return new ComparisonResult(Winner.BLACK, otherKickers.get(i), thisKickers.get(i));
             }
-            // If equal, continue to next kicker
         }
         
-        // All kickers are equal - it's a tie
-        return new ComparisonResult(Winner.TIE, null);
+        return new ComparisonResult(Winner.TIE, null, null);
     }
 }

@@ -6,6 +6,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CompareHighCardHandsTest {
 
+    // TODO: Task 1 - Remove implementation-tied tests
+    // The two tests below (shouldRankHighCardHandWithKickersSortedDescending and 
+    // shouldRankAnotherHighCardHandWithKickersSortedDescending) test internal HandRank structure.
+    // They are tied to implementation details, not observable behavior.
+    // Delete both tests and observe that the comparison tests still give us confidence.
+    // Lesson: Behavioral tests (checking comparison results) are more resilient to refactoring
+    // than implementation tests (checking internal HandRank structure).
+
+    // TODO: Task 2 - Write a test for when White wins
+    // Bug report: "When White wins, the system incorrectly reports that Black wins!"
+    // OPTIONAL: First run tests with coverage - notice the "else if (comparison < 0)" branch in Hand.compare() is not covered!
+    // Test case: Black: "2H 3D 5S 9C KD", White: "2C 3H 4S 8C AH"
+    // Expected: White should win with Ace
+    // Write the test first, see it fail, then fix the bug in Hand.compare() line ~104
+    // Key lesson: Code coverage helps identify untested paths where bugs hide
+
+    // TODO: Task 3 - Refactor these tests into parameterized tests
+    // Notice how many tests follow the same pattern?
+    // Consider consolidating them using @ParameterizedTest and @CsvSource
+
+    // TODO: Task 5 - Write a test for losingRank bug
+    // Bug report: "The losingRank in ComparisonResult is sometimes incorrect!"
+    // Write a test that checks both getWinningRank() and getLosingRank()
+    // Test case: Black "AH KD 9C 7D 4S" vs White "AH KD 9C 7D 3S"
+    // Expected: winningRank=FOUR, losingRank=THREE
+    // The test will fail, exposing the bug in Hand.compare()
+    // After fixing the bug, refactor to use builder pattern to prevent similar bugs
+
     @Test
     void shouldRankHighCardHandWithKickersSortedDescending() {
         // Given
@@ -34,20 +62,6 @@ class CompareHighCardHandsTest {
         assertThat(rank.getKickers()).containsExactly(
             Rank.JACK, Rank.NINE, Rank.FIVE, Rank.THREE, Rank.TWO
         );
-    }
-
-    @Test
-    void shouldCompareHighCardHandsByHighestCard() {
-        // Given
-        Hand black = Hand.parse("2H 3D 5S 9C KD");
-        Hand white = Hand.parse("2C 3H 4S 8C AH");
-        
-        // When
-        ComparisonResult result = black.compare(white);
-        
-        // Then
-        assertThat(result.getWinner()).isEqualTo(Winner.WHITE);
-        assertThat(result.describe()).isEqualTo("White wins - high card: Ace");
     }
 
     @Test
@@ -105,4 +119,14 @@ class CompareHighCardHandsTest {
         assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
         assertThat(result.describe()).isEqualTo("Black wins - high card: King");
     }
+
+    // TODO: Task 6 - Write tests for immutability
+    // Bug report: "We're seeing incorrect comparison results! Sometimes a hand that should win is losing."
+    // Investigation: Client code was modifying the cards list: hand.getCards().clear()
+    // This breaks comparison logic because the hand becomes empty!
+    // Your task: Write tests that try to modify the cards list (clear(), add(), remove())
+    // Tests should expect UnsupportedOperationException
+    // Then fix Hand.getCards() to return an unmodifiable list
+    // Hint: Override Lombok's generated getter with Collections.unmodifiableList()
+    // Key lesson: Protect internal state by returning unmodifiable collections!
 }
