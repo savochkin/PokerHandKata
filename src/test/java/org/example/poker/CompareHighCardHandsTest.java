@@ -14,11 +14,11 @@ class CompareHighCardHandsTest {
     // Write the test first, see it fail, then fix the bug in Hand.compare() line ~104
     // Key lesson: Code coverage helps identify untested paths where bugs hide
 
-    // TODO: Task 2 - Refactor these tests into parameterized tests
+    // TODO: Task 4 - Refactor these tests into parameterized tests
     // Notice how many tests follow the same pattern?
     // Consider consolidating them using @ParameterizedTest and @CsvSource
 
-    // TODO: Task 4 - Write a test for losingRank bug
+    // TODO: Task 2 - Write a test for losingRank bug
     // Bug report: "The losingRank in ComparisonResult is sometimes incorrect!"
     // Write a test that checks both getWinningRank() and getLosingRank()
     // Test case: Black "AH KD 9C 7D 4S" vs White "AH KD 9C 7D 3S"
@@ -82,7 +82,7 @@ class CompareHighCardHandsTest {
         assertThat(result.describe()).isEqualTo("Black wins - high card: King");
     }
 
-    // TODO: Task 5 - Write tests for immutability
+    // TODO: Task 3 - Write tests for immutability
     // Bug report: "We're seeing incorrect comparison results! Sometimes a hand that should win is losing."
     // Investigation: Client code was modifying the cards list: hand.getCards().clear()
     // This breaks comparison logic because the hand becomes empty!

@@ -70,67 +70,7 @@ void shouldReportWhiteWinsWhenWhiteHasHigherCard() {
 
 ---
 
-### Task 2: Refactor Tests - Reduce Duplication with Parameterized Tests
-
-**Problem:** The test class has many similar tests that follow the same pattern, making it harder to maintain.
-
-**Your Mission:**
-1. **🟢 GREEN** - Ensure all tests pass before refactoring
-2. **🔵 REFACTOR** - Consolidate similar tests into parameterized tests
-   - Use `@ParameterizedTest` and `@CsvSource`
-   - Example:
-   ```java
-   @ParameterizedTest
-   @CsvSource({
-       "'2H 3D 5S 9C KD', '2C 3H 4S 8C AH', WHITE, 'White wins - high card: Ace'",
-       "'2H 3D 5S 9C KD', '2C 3H 4S 8C KH', BLACK, 'Black wins - high card: 9'"
-   })
-   void shouldCompareHighCardHands(String blackHand, String whiteHand, 
-                                   Winner expectedWinner, String expectedDescription) {
-       // Test implementation
-   }
-   ```
-3. **🟢 GREEN** - Run tests to ensure they still pass
-
----
-
-### Task 3: Remove Boilerplate - Use Lombok in HandRank
-
-**Problem:** The `HandRank` class contains boilerplate code (constructor, getters). Look at the TODO comment.
-
-**Your Mission:**
-1. **🟢 GREEN** - Ensure all tests pass before refactoring
-2. **🔵 REFACTOR** - Apply Lombok annotations
-   - Open `HandRank.java`
-   - Remove manual constructor and getters
-   - Add `@Getter` and `@RequiredArgsConstructor`
-3. **🟢 GREEN** - Run tests to ensure they still pass
-
-**Before (Boilerplate):**
-```java
-public class HandRank {
-    private final Category category;
-    private final List<Rank> kickers;
-    
-    public HandRank(Category category, List<Rank> kickers) { ... }
-    public Category getCategory() { ... }
-    public List<Rank> getKickers() { ... }
-}
-```
-
-**After (Lombok):**
-```java
-@Getter
-@RequiredArgsConstructor
-public class HandRank {
-    private final Category category;
-    private final List<Rank> kickers;
-}
-```
-
----
-
-### Task 4: Fix Bug & Improve Readability with Builder Pattern (TDD + Refactoring)
+### Task 2: Fix Bug & Improve Readability with Builder Pattern (TDD + Refactoring)
 
 **Problem:** Bug report: *"The losingRank in ComparisonResult is sometimes incorrect!"*
 
@@ -183,6 +123,66 @@ return new ComparisonResult(Winner.BLACK, thisKickers.get(i), thisKickers.get(i)
 - Positional parameters with same types are error-prone
 - Builder pattern makes code self-documenting
 - Named parameters prevent copy-paste mistakes
+
+---
+
+### Task 3: Remove Boilerplate - Use Lombok in HandRank
+
+**Problem:** The `HandRank` class contains boilerplate code (constructor, getters). Look at the TODO comment.
+
+**Your Mission:**
+1. **🟢 GREEN** - Ensure all tests pass before refactoring
+2. **🔵 REFACTOR** - Apply Lombok annotations
+   - Open `HandRank.java`
+   - Remove manual constructor and getters
+   - Add `@Getter` and `@RequiredArgsConstructor`
+3. **🟢 GREEN** - Run tests to ensure they still pass
+
+**Before (Boilerplate):**
+```java
+public class HandRank {
+    private final Category category;
+    private final List<Rank> kickers;
+    
+    public HandRank(Category category, List<Rank> kickers) { ... }
+    public Category getCategory() { ... }
+    public List<Rank> getKickers() { ... }
+}
+```
+
+**After (Lombok):**
+```java
+@Getter
+@RequiredArgsConstructor
+public class HandRank {
+    private final Category category;
+    private final List<Rank> kickers;
+}
+```
+
+---
+
+### Task 4: Refactor Tests - Reduce Duplication with Parameterized Tests
+
+**Problem:** The test class has many similar tests that follow the same pattern, making it harder to maintain.
+
+**Your Mission:**
+1. **🟢 GREEN** - Ensure all tests pass before refactoring
+2. **🔵 REFACTOR** - Consolidate similar tests into parameterized tests
+   - Use `@ParameterizedTest` and `@CsvSource`
+   - Example:
+   ```java
+   @ParameterizedTest
+   @CsvSource({
+       "'2H 3D 5S 9C KD', '2C 3H 4S 8C AH', WHITE, 'White wins - high card: Ace'",
+       "'2H 3D 5S 9C KD', '2C 3H 4S 8C KH', BLACK, 'Black wins - high card: 9'"
+   })
+   void shouldCompareHighCardHands(String blackHand, String whiteHand, 
+                                   Winner expectedWinner, String expectedDescription) {
+       // Test implementation
+   }
+   ```
+3. **🟢 GREEN** - Run tests to ensure they still pass
 
 ---
 
@@ -406,10 +406,11 @@ grep -r "TODO:" src/
 ```
 
 **Files with TODOs:**
-- `CompareHighCardHandsTest.java` - Tasks 1, 2, 5
+- `CompareHighCardHandsTest.java` - Tasks 1, 2, 4
 - `HandRank.java` - Task 3
-- `Hand.java` - Task 4
-- `ComparisonResult.java` - Task 4
+- `Hand.java` - Task 2
+- `ComparisonResult.java` - Task 2
+- `Hand.java` - Task 5 (immutability)
 - `Hand.java` - Task 6 (make rank() private)
 - `HandRankTest.java` - Task 6 (delete this file)
 
@@ -421,37 +422,37 @@ src/
 │   ├── Card.java               # Single card (rank + suit)
 │   ├── Rank.java               # Card ranks enum (2-A)
 │   ├── Suit.java               # Card suits enum (C,D,H,S)
-│   ├── Hand.java               # 5-card hand with compare logic - Task 4, 6
+│   ├── Hand.java               # 5-card hand with compare logic - Task 2, 5, 6
 │   ├── Category.java           # Hand categories (HIGH_CARD)
 │   ├── HandRank.java           # Ranking result (category + kickers) - Task 3
 │   ├── Winner.java             # Winner enum (BLACK, WHITE, TIE)
-│   └── ComparisonResult.java   # Comparison result with description - Task 4
+│   └── ComparisonResult.java   # Comparison result with description - Task 2
 └── test/java/org/example/poker/
     ├── HandRankTest.java              # Implementation tests - DELETE in Task 6
-    └── CompareHighCardHandsTest.java  # Behavioral tests - Tasks 1, 2, 5
+    └── CompareHighCardHandsTest.java  # Behavioral tests - Tasks 1, 2, 4
 ```
 
 ## 📊 Progress Tracking
 
 - [ ] **Task 1:** Write test for White wins + fix bug (TDD)
-- [ ] **Task 2:** Refactor tests to parameterized tests
+- [ ] **Task 2:** Write test for losingRank bug + fix + refactor with builder (TDD + Refactoring)
 - [ ] **Task 3:** Remove boilerplate from HandRank using Lombok
-- [ ] **Task 4:** Write test for losingRank bug + fix + refactor with builder (TDD + Refactoring)
+- [ ] **Task 4:** Refactor tests to parameterized tests
 - [ ] **Task 5:** Write test for immutability + fix Hand.getCards() (TDD)
 - [ ] **Task 6:** Remove implementation-tied tests (behavioral testing)
 
 ## 🔄 TDD & Refactoring Workflow
 
-### Tasks 1, 4, 5: Test-Driven Development (TDD)
+### Tasks 1, 2, 5: Test-Driven Development (TDD)
 1. **🔴 RED** - Write a failing test first
 2. **🟢 GREEN** - Write minimal code to make it pass
 3. **🔵 REFACTOR** - Clean up the code
 
 **Key principle:** Let tests drive your implementation!
 
-**Task 4 combines TDD + Refactoring:** Write test → Fix bug → Refactor with builder
+**Task 2 combines TDD + Refactoring:** Write test → Fix bug → Refactor with builder
 
-### Tasks 2, 3, 6: Refactoring Discipline
+### Tasks 3, 4, 6: Refactoring Discipline
 1. **🟢 GREEN** - Ensure all tests pass before refactoring
 2. **🔵 REFACTOR** - Change implementation/tests without changing behavior
 3. **🟢 GREEN** - Verify all tests still pass
@@ -461,9 +462,9 @@ src/
 ## 💡 Tips
 
 - **Task 1:** Look at existing comparison tests for the pattern; check coverage first
-- **Task 2:** Use `@ParameterizedTest` with `@CsvSource` - check JUnit 5 docs
+- **Task 2:** Write test for `getLosingRank()` first; builder makes parameters explicit
 - **Task 3:** Look at other classes (Card, Rank, Suit) for Lombok examples
-- **Task 4:** Write test for `getLosingRank()` first; builder makes parameters explicit
+- **Task 4:** Use `@ParameterizedTest` with `@CsvSource` - check JUnit 5 docs
 - **Task 5:** Use `Collections.unmodifiableList()` to wrap the list; override Lombok's getter
 - **Task 6:** Notice which tests check internal structure vs observable behavior; run with coverage to verify `rank()` is still covered
 - **Run tests frequently** - Get immediate feedback after each change
@@ -497,10 +498,10 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 
 You've completed the kata when:
 - ✅ All 6 tasks completed in order
-- ✅ All tests passing (including new tests from Tasks 1, 4 & 5)
-- ✅ Tests use parameterized tests where appropriate (Task 2)
+- ✅ All tests passing (including new tests from Tasks 1, 2 & 5)
+- ✅ ComparisonResult uses builder pattern (Task 2)
 - ✅ HandRank uses Lombok annotations (Task 3)
-- ✅ ComparisonResult uses builder pattern (Task 4)
+- ✅ Tests use parameterized tests where appropriate (Task 4)
 - ✅ Hand.getCards() returns unmodifiable list (Task 5)
 - ✅ Implementation-tied tests removed and `rank()` is private (Task 6)
 - ✅ No compilation errors or warnings
@@ -510,9 +511,9 @@ You've completed the kata when:
 
 After completing all tasks, reflect on:
 - **Task 1:** How did TDD help you catch bugs early?
-- **Task 2:** What are the benefits of parameterized tests?
+- **Task 2:** When should you use builder pattern vs constructors?
 - **Task 3:** How much boilerplate did Lombok eliminate?
-- **Task 4:** When should you use builder pattern vs constructors?
+- **Task 4:** What are the benefits of parameterized tests?
 - **Task 5:** Why is immutability important in domain objects?
 - **Task 6:** Why are behavioral tests more resilient than implementation-tied tests?
 
