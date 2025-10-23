@@ -14,7 +14,7 @@ class CompareHighCardHandsTest {
     // Write the test first, see it fail, then fix the bug in Hand.compare() line ~104
     // Key lesson: Code coverage helps identify untested paths where bugs hide
 
-    // TODO: Task 3 - Refactor these tests into parameterized tests
+    // TODO: Task 2 - Refactor these tests into parameterized tests
     // Notice how many tests follow the same pattern?
     // Consider consolidating them using @ParameterizedTest and @CsvSource
 
