@@ -10,7 +10,7 @@ You have a **working implementation** of Story 2 (Compare High Card Hands) from 
 - Compare hands: `black.compare(white)` returns winner and description
 
 However, there are **intentional issues** that need to be fixed through TDD and refactoring practices.
-
+yadayada
 ## 🎓 Learning Objectives
 
 By completing these tasks, you will practice:
