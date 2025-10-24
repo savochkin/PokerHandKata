@@ -96,12 +96,25 @@ public class Hand {
                 // TODO: Task 5 - Three parameters, two of the same type (Rank)!
                 // BUG: Accidentally used thisKickers twice! Easy mistake with positional params.
                 // Builder pattern would make this obvious: .winningRank(...).losingRank(...)
-                return new ComparisonResult(Winner.BLACK, thisKickers.get(i), thisKickers.get(i));
+                return ComparisonResult.builder()
+                    .winner(Winner.BLACK)
+                    .winningRank(thisKickers.get(i))
+                    .losingRank(otherKickers.get(i))  // Now it's obvious which is which!
+                    .build();
             } else if (comparison < 0) {
-                return new ComparisonResult(Winner.WHITE, otherKickers.get(i), thisKickers.get(i));
+                return ComparisonResult.builder()
+                    .winner(Winner.WHITE)
+                    .winningRank(otherKickers.get(i))
+                    .losingRank(thisKickers.get(i))  // Now it's obvious which is which!
+                    .build();
             }
         }
-        
-        return new ComparisonResult(Winner.TIE, null, null);
+
+        return ComparisonResult.builder()
+            .winner(Winner.TIE)
+            .winningRank(null)
+            .losingRank(null)  // Now it's obvious which is which!
+            .build();
+
     }
 }

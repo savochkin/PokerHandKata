@@ -1,6 +1,9 @@
 package org.example.poker;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 // TODO: Task 5 - Add @Builder annotation here
@@ -9,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 // You'll have: ComparisonResult.builder().winner(Winner.BLACK).winningRank(rank).build()
 // Don't forget to also add @AllArgsConstructor (since @Builder needs a constructor)
 
+@Builder
 @Getter
-@RequiredArgsConstructor
 public class ComparisonResult {
     private final Winner winner;
     private final Rank winningRank;

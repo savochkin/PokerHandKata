@@ -6,13 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CompareHighCardHandsTest {
 
-    // TODO: Task 1 - Write a test for when White wins
-    // Bug report: "When White wins, the system incorrectly reports that Black wins!"
-    // OPTIONAL: First run tests with coverage - notice the "else if (comparison < 0)" branch in Hand.compare() is not covered!
-    // Test case: Black: "2H 3D 5S 9C KD", White: "2C 3H 4S 8C AH"
-    // Expected: White should win with Ace
-    // Write the test first, see it fail, then fix the bug in Hand.compare() line ~104
-    // Key lesson: Code coverage helps identify untested paths where bugs hide
     @Test
     void shouldReturnWhiteWhenWhiteWins() {
         // Given
@@ -27,13 +20,16 @@ class CompareHighCardHandsTest {
         assertThat(result.describe()).isEqualTo("White wins - high card: Ace");
     }
 
-    // TODO: Task 2 - Write a test for losingRank bug
-    // Bug report: "The losingRank in ComparisonResult is sometimes incorrect!"
-    // Write a test that checks both getWinningRank() and getLosingRank()
-    // Test case: Black "AH KD 9C 7D 4S" vs White "AH KD 9C 7D 3S"
-    // Expected: winningRank=FOUR, losingRank=THREE
-    // The test will fail, exposing the bug in Hand.compare()
-    // After fixing the bug, refactor to use builder pattern to prevent similar bugs
+    @Test
+    void shouldSetCorrectLosingRankWhenBlackWins() {
+        Hand black = Hand.parse("AH KD 9C 7D 4S");
+        Hand white = Hand.parse("AH KD 9C 7D 3S");
+
+        ComparisonResult result = black.compare(white);
+
+        assertThat(result.getWinningRank()).isEqualTo(Rank.FOUR);
+        assertThat(result.getLosingRank()).isEqualTo(Rank.THREE); // This will fail!
+    }
 
     // TODO: Task 4 - Refactor these tests into parameterized tests
     // Notice how many tests follow the same pattern?
