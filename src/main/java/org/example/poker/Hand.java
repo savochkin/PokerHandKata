@@ -10,10 +10,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Getter
 @Builder
 public class Hand {
     private final List<Card> cards;
+
+    public List<Card> getCards() {
+        return List.copyOf(cards);
+    }
 
     private void validate() {
         if (cards.size() != 5) {
