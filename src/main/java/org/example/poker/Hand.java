@@ -30,7 +30,7 @@ public class Hand {
         }
     }
 
-    public boolean containsCard(Rank rank, Suit suit) {
+    private boolean containsCard(Rank rank, Suit suit) {
         Card searchCard = new Card(rank, suit);
         return cards.contains(searchCard);
     }
@@ -70,7 +70,7 @@ public class Hand {
         return hand;
     }
 
-    public HandRank rank() {
+    private HandRank rank() {
         // Story 2: Assume all hands are High Card
         // Sort cards by rank descending to get kickers
         List<Rank> kickers = cards.stream()
@@ -86,8 +86,8 @@ public class Hand {
         HandRank otherRank = other.rank();
 
         // Compare kickers lexicographically
-        List<Rank> thisKickers = thisRank.getKickers();
-        List<Rank> otherKickers = otherRank.getKickers();
+        List<Rank> thisKickers = thisRank.kickers();
+        List<Rank> otherKickers = otherRank.kickers();
 
         for (int i = 0; i < thisKickers.size(); i++) {
             int comparison = Integer.compare(

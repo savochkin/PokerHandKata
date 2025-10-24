@@ -1,9 +1,11 @@
 package org.example.poker;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CompareHighCardHandsTest {
 
@@ -24,7 +26,23 @@ class CompareHighCardHandsTest {
     // Tests should expect UnsupportedOperationException
     // Then fix Hand.getCards() to return an unmodifiable list
     // Hint: Override Lombok's generated getter with Collections.unmodifiableList()
-    // Key lesson: Protect internal state by returning unmodifiable collections!
+    //
+    @Test
+    void shouldReturnUnmodifiableCardsList() {
+        Hand hand = Hand.parse("AH KD 9C 7D 4S");
+
+        assertThatThrownBy(() -> hand.getCards().clear())
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void shouldNotAllowAddingCards() {
+        Hand hand = Hand.parse("AH KD 9C 7D 4S");
+        Card newCard = new Card(Rank.TWO, Suit.HEARTS);
+
+        assertThatThrownBy(() -> hand.getCards().add(newCard))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
 
 
     @ParameterizedTest
