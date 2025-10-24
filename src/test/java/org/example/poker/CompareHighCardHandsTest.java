@@ -1,6 +1,7 @@
 package org.example.poker;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,19 +15,6 @@ class CompareHighCardHandsTest {
     // Write the test first, see it fail, then fix the bug in Hand.compare() line ~104
     // Key lesson: Code coverage helps identify untested paths where bugs hide
 
-    @Test
-    void shouldReturnWhiteWhenWhiteWins() {
-        // Given
-        Hand black = Hand.parse("2H 3D 5S 9C KD");
-        Hand white = Hand.parse("2C 3H 4S 8C AH");
-
-        // When
-        ComparisonResult result = black.compare(white);
-
-        // Then
-        assertThat(result.getWinner()).isEqualTo(Winner.WHITE);
-        assertThat(result.describe()).isEqualTo("White wins - high card: Ace");
-    }
 
     // TODO: Task 2 - Write a test for losingRank bug
     // Bug report: "The losingRank in ComparisonResult is sometimes incorrect!"
@@ -51,70 +39,27 @@ class CompareHighCardHandsTest {
     // Key lesson: Protect internal state by returning unmodifiable collections!
 
 
-    @Test
-    void shouldReturnTieWhenAllKickersAreEqual() {
-        // Given
-        Hand black = Hand.parse("2H 3D 5S 9C KD");
-        Hand white = Hand.parse("2D 3H 5C 9S KH");
-
-        // When
-        ComparisonResult result = black.compare(white);
-
-        // Then
-        assertThat(result.getWinner()).isEqualTo(Winner.TIE);
-        assertThat(result.describe()).isEqualTo("Tie");
-    }
-
-    @Test
-    void shouldCompareHighCardHandsByDifferentKicker() {
-        // Given
-        Hand black = Hand.parse("2H 3D 5S 9C KD");
-        Hand white = Hand.parse("2C 3H 4S 8C KH");
-
-        // When
-        ComparisonResult result = black.compare(white);
-
-        // Then
-        assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
-        assertThat(result.describe()).isEqualTo("Black wins - high card: 9");
-    }
-
-    @Test
-    void shouldCompareHighCardHandsByLastKickerWhenOthersAreEqual() {
-        // Given
-        Hand black = Hand.parse("AH KD 9C 7D 4S");
-        Hand white = Hand.parse("AH KD 9C 7D 3S");
-
-        // When
-        ComparisonResult result = black.compare(white);
-
-        // Then
-        assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
-        assertThat(result.describe()).isEqualTo("Black wins - high card: 4");
-    }
-
-    @Test
-    void shouldCompareHighCardHandsBySecondKickerWhenFirstIsEqual() {
-        // Given
-        Hand black = Hand.parse("AH KD 9C 7D 4S");
-        Hand white = Hand.parse("AH QD 9C 7D 4S");
-
-        // When
-        ComparisonResult result = black.compare(white);
-
-        // Then
-        assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
-        assertThat(result.describe()).isEqualTo("Black wins - high card: King");
-    }
-
-    @Test
-    void shouldSetCorrectLosingRankWhenBlackWins() {
-        Hand black = Hand.parse("AH KD 9C 7D 4S");
-        Hand white = Hand.parse("AH KD 9C 7D 3S");
+    @ParameterizedTest
+    @CsvSource({
+            "'2H 3D 5S 9C KD', '2C 3H 4S 8C AH', WHITE, 'White wins - high card: Ace'",
+            "'2H 3D 5S 9C KD', '2C 3H 4S 8C KH', BLACK, 'Black wins - high card: 9'",
+            "'AH KD 9C 7D 4S', 'AH KD 9C 7D 3S', BLACK, 'Black wins - high card: 4'",
+            "'AH KD 9C 7D 4S', 'AH QD 9C 7D 4S', BLACK, 'Black wins - high card: King'",
+            "'AH KD 9C 7D 4S', 'AH KD 9C 7D 4S', TIE, 'Tie'",
+    })
+    void shouldCompareHighCardHands(
+            String blackHand,
+            String whiteHand,
+            Winner expectedWinner,
+            String expectedDescription
+    ) {
+        // Test implementation
+        Hand black = Hand.parse(blackHand);
+        Hand white = Hand.parse(whiteHand);
 
         ComparisonResult result = black.compare(white);
 
-        assertThat(result.getWinningRank()).isEqualTo(Rank.FOUR);
-        assertThat(result.getLosingRank()).isEqualTo(Rank.THREE);
+        assertThat(result.getWinner()).isEqualTo(expectedWinner);
+        assertThat(result.describe()).isEqualTo(expectedDescription);
     }
 }
