@@ -56,10 +56,10 @@ class CompareHighCardHandsTest {
         // Given
         Hand black = Hand.parse("2H 3D 5S 9C KD");
         Hand white = Hand.parse("2D 3H 5C 9S KH");
-        
+
         // When
         ComparisonResult result = black.compare(white);
-        
+
         // Then
         assertThat(result.getWinner()).isEqualTo(Winner.TIE);
         assertThat(result.describe()).isEqualTo("Tie");
@@ -70,10 +70,10 @@ class CompareHighCardHandsTest {
         // Given
         Hand black = Hand.parse("2H 3D 5S 9C KD");
         Hand white = Hand.parse("2C 3H 4S 8C KH");
-        
+
         // When
         ComparisonResult result = black.compare(white);
-        
+
         // Then
         assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
         assertThat(result.describe()).isEqualTo("Black wins - high card: 9");
@@ -84,10 +84,10 @@ class CompareHighCardHandsTest {
         // Given
         Hand black = Hand.parse("AH KD 9C 7D 4S");
         Hand white = Hand.parse("AH KD 9C 7D 3S");
-        
+
         // When
         ComparisonResult result = black.compare(white);
-        
+
         // Then
         assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
         assertThat(result.describe()).isEqualTo("Black wins - high card: 4");
@@ -98,12 +98,23 @@ class CompareHighCardHandsTest {
         // Given
         Hand black = Hand.parse("AH KD 9C 7D 4S");
         Hand white = Hand.parse("AH QD 9C 7D 4S");
-        
+
         // When
         ComparisonResult result = black.compare(white);
-        
+
         // Then
         assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
         assertThat(result.describe()).isEqualTo("Black wins - high card: King");
+    }
+
+    @Test
+    void shouldSetCorrectLosingRankWhenBlackWins() {
+        Hand black = Hand.parse("AH KD 9C 7D 4S");
+        Hand white = Hand.parse("AH KD 9C 7D 3S");
+
+        ComparisonResult result = black.compare(white);
+
+        assertThat(result.getWinningRank()).isEqualTo(Rank.FOUR);
+        assertThat(result.getLosingRank()).isEqualTo(Rank.THREE);
     }
 }

@@ -1,5 +1,6 @@
 package org.example.poker;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -10,23 +11,24 @@ import lombok.RequiredArgsConstructor;
 // Don't forget to also add @AllArgsConstructor (since @Builder needs a constructor)
 
 @Getter
+@Builder
 @RequiredArgsConstructor
 public class ComparisonResult {
     private final Winner winner;
     private final Rank winningRank;
     private final Rank losingRank;
-    
+
     public String describe() {
         if (winner == Winner.TIE) {
             return "Tie";
         }
-        
+
         String winnerName = winner == Winner.BLACK ? "Black" : "White";
         String rankName = formatRankName(winningRank);
-        
+
         return winnerName + " wins - high card: " + rankName;
     }
-    
+
     private String formatRankName(Rank rank) {
         return switch (rank) {
             case TWO -> "2";

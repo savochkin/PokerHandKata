@@ -19,7 +19,7 @@ public class Hand {
         if (cards.size() != 5) {
             throw new IllegalArgumentException("A hand must contain exactly 5 cards, got " + cards.size());
         }
-        
+
         // Check for duplicate cards by comparing HashSet size with original list size
         Set<Card> uniqueCards = new HashSet<>(cards);
         if (uniqueCards.size() != cards.size()) {
@@ -46,13 +46,13 @@ public class Hand {
         if (handString == null || handString.trim().isEmpty()) {
             throw new IllegalArgumentException("Hand string cannot be empty");
         }
-        
+
         String[] tokens = handString.trim().split("\\s+");
-        
+
         if (tokens.length != 5) {
             throw new IllegalArgumentException("A hand must contain exactly 5 cards, got " + tokens.length);
         }
-        
+
         List<Card> cardList = new java.util.ArrayList<>();
         for (String token : tokens) {
             try {
@@ -61,7 +61,7 @@ public class Hand {
                 throw new IllegalArgumentException("Invalid card token: " + token + " - " + e.getMessage(), e);
             }
         }
-        
+
         Hand hand = Hand.builder().cards(cardList).build();
         hand.validate();
         return hand;
@@ -74,36 +74,48 @@ public class Hand {
                 .map(Card::getRank)
                 .sorted(Comparator.comparingInt(Rank::getValue).reversed())
                 .collect(Collectors.toList());
-        
+
         return new HandRank(Category.HIGH_CARD, kickers);
     }
 
     public ComparisonResult compare(Hand other) {
         HandRank thisRank = this.rank();
         HandRank otherRank = other.rank();
-        
+
         // Compare kickers lexicographically
         List<Rank> thisKickers = thisRank.getKickers();
         List<Rank> otherKickers = otherRank.getKickers();
-        
+
         for (int i = 0; i < thisKickers.size(); i++) {
             int comparison = Integer.compare(
                 thisKickers.get(i).getValue(),
                 otherKickers.get(i).getValue()
             );
-            
+
             if (comparison > 0) {
                 // TODO: Task 5 - Three parameters, two of the same type (Rank)!
                 // BUG: Accidentally used thisKickers twice! Easy mistake with positional params.
                 // Builder pattern would make this obvious: .winningRank(...).losingRank(...)
-                return new ComparisonResult(Winner.BLACK, thisKickers.get(i), thisKickers.get(i));
+//                return new ComparisonResult(Winner.BLACK, thisKickers.get(i), otherKickers.get(i));
+                return ComparisonResult.builder()
+                        .winner(Winner.BLACK)
+                        .winningRank(thisKickers.get(i))
+                        .losingRank(otherKickers.get(i))  // Now it's obvious which is which!
+                        .build();
             } else if (comparison < 0) {
                 // TODO: Task 1 - Fix the bug
                 // BUG: Always returning BLACK instead of WHITE!
-                return new ComparisonResult(Winner.WHITE, otherKickers.get(i), thisKickers.get(i));
+//                return new ComparisonResult(Winner.WHITE, otherKickers.get(i), otherKickers.get(i));
+                return ComparisonResult.builder()
+                        .winner(Winner.WHITE)
+                        .winningRank(otherKickers.get(i))
+                        .losingRank(thisKickers.get(i))  // Now it's obvious which is which!
+                        .build();
             }
         }
-        
-        return new ComparisonResult(Winner.TIE, null, null);
+
+        return ComparisonResult.builder()
+                .winner(Winner.TIE)
+                .build();
     }
 }
