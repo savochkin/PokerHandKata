@@ -13,6 +13,19 @@ class CompareHighCardHandsTest {
     // Expected: White should win with Ace
     // Write the test first, see it fail, then fix the bug in Hand.compare() line ~104
     // Key lesson: Code coverage helps identify untested paths where bugs hide
+    @Test
+    void shouldReturnWhiteWhenWhiteWins() {
+        // Given
+        Hand black = Hand.parse("2H 3D 5S 9C KD");
+        Hand white = Hand.parse("2C 3H 4S 8C AH");
+
+        // When
+        ComparisonResult result = black.compare(white);
+
+        // Then
+        assertThat(result.getWinner()).isEqualTo(Winner.WHITE);
+        assertThat(result.describe()).isEqualTo("White wins - high card: Ace");
+    }
 
     // TODO: Task 2 - Write a test for losingRank bug
     // Bug report: "The losingRank in ComparisonResult is sometimes incorrect!"
