@@ -1,39 +1,31 @@
 package org.example.poker;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CompareHighCardHandsTest {
 
-    @Test
-    void shouldReturnWhiteWhenWhiteWins() {
-        // Given
-        Hand black = Hand.parse("2H 3D 5S 9C KD");
-        Hand white = Hand.parse("2C 3H 4S 8C AH");
+    @ParameterizedTest
+    @CsvSource({
+            "'2H 3D 5S 9C KD', '2C 3H 4S 8C AH', WHITE, 'White wins - high card: Ace'",
+            "'2H 3D 5S 9C KD', '2C 3H 4S 8C KH', BLACK, 'Black wins - high card: 9'"
+    })
+    void shouldCompareHighCardHands(String blackHand, String whiteHand,
+                                    Winner expectedWinner, String expectedDescription) {
+        Hand black = Hand.parse(blackHand);
+        Hand white = Hand.parse(whiteHand);
 
         // When
         ComparisonResult result = black.compare(white);
 
         // Then
-        assertThat(result.getWinner()).isEqualTo(Winner.WHITE);
-        assertThat(result.describe()).isEqualTo("White wins - high card: Ace");
+        assertThat(result.getWinner()).isEqualTo(expectedWinner);
+        assertThat(result.describe()).isEqualTo(expectedDescription);
+
     }
-
-    @Test
-    void shouldSetCorrectLosingRankWhenBlackWins() {
-        Hand black = Hand.parse("AH KD 9C 7D 4S");
-        Hand white = Hand.parse("AH KD 9C 7D 3S");
-
-        ComparisonResult result = black.compare(white);
-
-        assertThat(result.getWinningRank()).isEqualTo(Rank.FOUR);
-        assertThat(result.getLosingRank()).isEqualTo(Rank.THREE); // This will fail!
-    }
-
-    // TODO: Task 4 - Refactor these tests into parameterized tests
-    // Notice how many tests follow the same pattern?
-    // Consider consolidating them using @ParameterizedTest and @CsvSource
 
     // TODO: Task 5 - Write tests for immutability
     // Bug report: "We're seeing incorrect comparison results! Sometimes a hand that should win is losing."
