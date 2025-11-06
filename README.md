@@ -42,8 +42,7 @@ src/main/java/org/example/poker/
 │   │   └── Winner.java
 │   ├── port/
 │   │   ├── in/                      # Inbound ports (use cases)
-│   │   │   ├── CompareHandsUseCase.java
-│   │   │   └── ComparisonResponse.java
+│   │   │   └── CompareHandsUseCase.java
 │   │   └── out/                     # Outbound ports (dependencies)
 │   │       └── (to be added in tasks)
 │   └── service/
@@ -53,7 +52,8 @@ src/main/java/org/example/poker/
 │   ├── in/                          # Inbound adapters (driving)
 │   │   ├── rest/                    # REST API adapter (IMPLEMENTED)
 │   │   │   ├── RestCompareHandsController.java
-│   │   │   └── CompareHandsRequest.java
+│   │   │   ├── CompareHandsRequest.java (REST input DTO)
+│   │   │   └── CompareHandsResponse.java (REST output DTO)
 │   │   └── cli/                     # CLI adapter (TASK 2)
 │   │       └── (to be implemented)
 │   └── out/                         # Outbound adapters (driven)
@@ -72,19 +72,21 @@ src/main/java/org/example/poker/
 
 **Architecture Flow:**
 ```
-HTTP Request
+HTTP Request (JSON)
     ↓
 RestCompareHandsController (Adapter - IN)
-    ↓
+    ↓ calls
 CompareHandsUseCase (Port - IN)
-    ↓
+    ↓ implemented by
 CompareHandsService (Application Service)
-    ↓
+    ↓ uses
 Hand.compare() (Domain Logic)
+    ↓ returns
+ComparisonResult (Domain Object)
+    ↓ mapped by adapter to
+CompareHandsResponse (REST DTO)
     ↓
-ComparisonResponse (Port DTO)
-    ↓
-HTTP Response
+HTTP Response (JSON)
 ```
 
 **Key Components:**
@@ -97,11 +99,12 @@ HTTP Response
 2. **Application Service:** `CompareHandsService`
    - Implements the use case
    - Orchestrates domain logic
-   - Maps between port DTOs and domain objects
+   - Returns domain objects directly (no DTO mapping at this layer)
 
 3. **REST Adapter:** `RestCompareHandsController`
    - Translates HTTP requests to use case calls
-   - Handles REST-specific concerns (status codes, JSON)
+   - Maps domain objects (`ComparisonResult`) to REST DTOs (`CompareHandsResponse`)
+   - Handles REST-specific concerns (status codes, JSON, error handling)
    - Depends on port, not on domain directly
 
 **Testing:**

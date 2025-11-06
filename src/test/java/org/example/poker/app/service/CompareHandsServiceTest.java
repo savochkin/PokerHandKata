@@ -1,6 +1,7 @@
 package org.example.poker.app.service;
 
-import org.example.poker.app.port.in.ComparisonResponse;
+import org.example.poker.app.domain.ComparisonResult;
+import org.example.poker.app.domain.Winner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Unit test for CompareHandsService.
  * Tests the service layer in isolation (no Spring context needed).
+ * Service now returns domain objects (ComparisonResult) directly.
  */
 class CompareHandsServiceTest {
     
@@ -22,24 +24,24 @@ class CompareHandsServiceTest {
     
     @Test
     void shouldCompareHighCardHands() {
-        ComparisonResponse response = service.compareHands(
+        ComparisonResult result = service.compareHands(
                 "AH KD 9C 7D 4S",
                 "KH QD 9C 7D 4S"
         );
         
-        assertThat(response.getWinner()).isEqualTo("BLACK");
-        assertThat(response.getDescription()).isEqualTo("Black wins - high card: Ace");
+        assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
+        assertThat(result.describe()).isEqualTo("Black wins - high card: Ace");
     }
     
     @Test
     void shouldReturnTieForEqualHands() {
-        ComparisonResponse response = service.compareHands(
+        ComparisonResult result = service.compareHands(
                 "2H 3D 5S 9C KD",
                 "2D 3H 5C 9S KH"
         );
         
-        assertThat(response.getWinner()).isEqualTo("TIE");
-        assertThat(response.getDescription()).isEqualTo("Tie");
+        assertThat(result.getWinner()).isEqualTo(Winner.TIE);
+        assertThat(result.describe()).isEqualTo("Tie");
     }
     
     @Test
@@ -60,12 +62,12 @@ class CompareHandsServiceTest {
     
     @Test
     void shouldComparePairVsHighCard() {
-        ComparisonResponse response = service.compareHands(
+        ComparisonResult result = service.compareHands(
                 "2H 2D 5S 9C KD",
                 "3C 4H 5C 8C AH"
         );
         
-        assertThat(response.getWinner()).isEqualTo("BLACK");
-        assertThat(response.getDescription()).isEqualTo("Black wins - pair");
+        assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
+        assertThat(result.describe()).isEqualTo("Black wins - pair");
     }
 }
