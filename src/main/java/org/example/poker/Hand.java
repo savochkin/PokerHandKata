@@ -2,7 +2,6 @@ package org.example.poker;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Singular;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -129,7 +128,7 @@ public class Hand {
                 .toList();
         
         if (trips.isPresent() && !pairs.isEmpty()) {
-            return new HandRank(Category.FULL_HOUSE, List.of(trips.get(), pairs.get(0)));
+            return new HandRank(Category.FULL_HOUSE, List.of(trips.get(), pairs.getFirst()));
         }
         
         // FLUSH
@@ -167,7 +166,7 @@ public class Hand {
         
         // ONE_PAIR
         if (pairs.size() == 1) {
-            Rank pairRank = pairs.get(0);
+            Rank pairRank = pairs.getFirst();
             List<Rank> kickers = sortedRanks.stream()
                     .filter(r -> !r.equals(pairRank))
                     .toList();
@@ -208,7 +207,7 @@ public class Hand {
             return Rank.FIVE.getValue();
         }
         // Otherwise, highest card
-        return sortedRanks.get(0).getValue();
+        return sortedRanks.getFirst().getValue();
     }
 
     public ComparisonResult compare(Hand other) {

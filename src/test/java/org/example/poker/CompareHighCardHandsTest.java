@@ -85,7 +85,7 @@ class CompareHighCardHandsTest {
         Hand hand = Hand.parse("AH KD 9C 7D 4S");
         
         // When/Then
-        assertThatThrownBy(() -> hand.getCards().remove(0))
+        assertThatThrownBy(() -> hand.getCards().removeFirst())
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 }
