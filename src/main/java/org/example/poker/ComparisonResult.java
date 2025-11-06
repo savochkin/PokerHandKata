@@ -11,6 +11,7 @@ public class ComparisonResult {
     private final Winner winner;
     private final Rank winningRank;
     private final Rank losingRank;
+    private final Category category;
     
     public String describe() {
         if (winner == Winner.TIE) {
@@ -18,8 +19,17 @@ public class ComparisonResult {
         }
         
         String winnerName = winner == Winner.BLACK ? "Black" : "White";
-        String rankName = formatRankName(winningRank);
         
+        if (category == Category.ONE_PAIR) {
+            if (winningRank == null) {
+                return winnerName + " wins - pair";
+            }
+            String rankName = formatRankName(winningRank);
+            return winnerName + " wins - pair: " + rankName;
+        }
+        
+        // HIGH_CARD
+        String rankName = formatRankName(winningRank);
         return winnerName + " wins - high card: " + rankName;
     }
     

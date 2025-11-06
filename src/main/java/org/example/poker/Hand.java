@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -74,8 +75,35 @@ public class Hand {
     }
 
     private HandRank rank() {
-        // Story 2: Assume all hands are High Card
-        // Sort cards by rank descending to get kickers
+        // Count occurrences of each rank
+        var rankCounts = cards.stream()
+                .map(Card::getRank)
+                .collect(Collectors.groupingBy(r -> r, Collectors.counting()));
+        
+        // Check for pair
+        var pair = rankCounts.entrySet().stream()
+                .filter(e -> e.getValue() == 2)
+                .map(Map.Entry::getKey)
+                .findFirst();
+        
+        if (pair.isPresent()) {
+            // ONE_PAIR: [pairRank, kicker1, kicker2, kicker3]
+            Rank pairRank = pair.get();
+            List<Rank> kickers = cards.stream()
+                    .map(Card::getRank)
+                    .filter(r -> !r.equals(pairRank))
+                    .sorted(Comparator.comparingInt(Rank::getValue).reversed())
+                    .toList();
+            
+            // Put pair rank first, then kickers
+            List<Rank> allRanks = new java.util.ArrayList<>();
+            allRanks.add(pairRank);
+            allRanks.addAll(kickers);
+            
+            return new HandRank(Category.ONE_PAIR, allRanks);
+        }
+        
+        // HIGH_CARD: Sort all cards by rank descending
         List<Rank> kickers = cards.stream()
                 .map(Card::getRank)
                 .sorted(Comparator.comparingInt(Rank::getValue).reversed())
@@ -88,7 +116,29 @@ public class Hand {
         HandRank thisRank = this.rank();
         HandRank otherRank = other.rank();
         
-        // Compare kickers lexicographically
+        // Compare by category first
+        int categoryComparison = Integer.compare(
+                thisRank.category().getStrength(),
+                otherRank.category().getStrength()
+        );
+        
+        if (categoryComparison > 0) {
+            return ComparisonResult.builder()
+                    .winner(Winner.BLACK)
+                    .winningRank(null)
+                    .losingRank(null)
+                    .category(thisRank.category())
+                    .build();
+        } else if (categoryComparison < 0) {
+            return ComparisonResult.builder()
+                    .winner(Winner.WHITE)
+                    .winningRank(null)
+                    .losingRank(null)
+                    .category(otherRank.category())
+                    .build();
+        }
+        
+        // Same category - compare kickers lexicographically
         List<Rank> thisKickers = thisRank.kickers();
         List<Rank> otherKickers = otherRank.kickers();
         
@@ -103,12 +153,14 @@ public class Hand {
                         .winner(Winner.BLACK)
                         .winningRank(thisKickers.get(i))
                         .losingRank(otherKickers.get(i))
+                        .category(thisRank.category())
                         .build();
             } else if (comparison < 0) {
                 return ComparisonResult.builder()
                         .winner(Winner.WHITE)
                         .winningRank(otherKickers.get(i))
                         .losingRank(thisKickers.get(i))
+                        .category(thisRank.category())
                         .build();
             }
         }
@@ -117,6 +169,7 @@ public class Hand {
                 .winner(Winner.TIE)
                 .winningRank(null)
                 .losingRank(null)
+                .category(thisRank.category())
                 .build();
     }
 }
