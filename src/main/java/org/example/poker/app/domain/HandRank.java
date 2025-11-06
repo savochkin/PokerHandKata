@@ -1,4 +1,4 @@
-package org.example.poker;
+package org.example.poker.app.domain;
 
 import java.util.List;
 

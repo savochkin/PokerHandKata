@@ -1,522 +1,457 @@
-# Poker Hand Kata - Story 2 Refactoring Tasks
+# Hexagonal Architecture Kata - Poker Hand Comparison
 
-A TDD and refactoring kata for improving existing code through test-driven bug fixes and systematic refactoring.
+A hands-on kata for learning hexagonal architecture (Ports & Adapters) by building a poker hand comparison service with multiple adapters.
 
-## 🎯 What You Have
+## 📖 Business Context
 
-You have a **working implementation** of Story 2 (Compare High Card Hands) from the Poker Hand Kata. The code can:
-- Parse poker hands: `Hand.parse("AH KD 9C 7D 4S")`
-- Rank hands: `hand.rank()` returns category and kickers
-- Compare hands: `black.compare(white)` returns winner and description
+**Gaming Platform Startup - MVP Requirements:**
 
-However, there are **intentional issues** that need to be fixed through TDD and refactoring practices.
+> "We're building a social poker platform. For our MVP, players need to submit their hands through our web app and see who wins. Later, we'll add a CLI for developers, store game history in a database, and let users view their comparison history."
 
 ## 🎓 Learning Objectives
 
-By completing these tasks, you will practice:
-- **TDD** - Writing tests first, then fixing code
-- **Refactoring** - Improving code while keeping tests green
-- **Lombok** - Reducing boilerplate code
-- **Builder Pattern** - Improving code readability
-- **Immutability** - Protecting objects from unwanted modifications
+By completing this kata, you will:
+- ✅ Understand hexagonal architecture structure
+- ✅ Learn to separate domain from infrastructure
+- ✅ Practice defining ports (contracts)
+- ✅ Implement multiple adapters for same port
+- ✅ See how domain stays pure and testable
+- ✅ Experience dependency inversion in practice
 
-## 📋 The Tasks
+## 🏗️ Architecture Overview
 
-### Task 1: Fix the Bug - White Wins Reported as Black Wins (TDD)
+This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
 
-**Problem:** You received a bug report: *"When White wins, the system incorrectly reports that Black wins!"*
+### Key Principles
 
-**Your Mission:**
+1. **Domain at the center** - Pure business logic with no external dependencies
+2. **Ports define contracts** - Interfaces that express what the domain needs/provides
+3. **Adapters connect to outside world** - REST APIs, CLI, databases, etc.
+4. **Dependency inversion** - Domain doesn't depend on adapters; adapters depend on domain
 
-**Step 0: Check Test Coverage (Optional but Recommended)**
-1. Run tests with coverage in your IDE (IntelliJ: Run → Run with Coverage)
-2. Open `Hand.java` and look at the `compare()` method
-3. Notice the `else if (comparison < 0)` branch - is it covered?
-4. **Observation:** The bug exists in an untested code path!
+### Folder Structure
 
-**Step 1: 🔴 RED** - Write a failing test that demonstrates the bug
-1. Open `CompareHighCardHandsTest.java`
-2. Add a test for: Black `2H 3D 5S 9C KD` vs White `2C 3H 4S 8C AH`
-3. White should win (Ace beats King)
-4. Run the test - it should fail (shows the bug)
-5. Run with coverage again - now the buggy branch is covered!
+```
+src/main/java/org/example/poker/
+├── app/                             # INSIDE THE HEXAGON
+│   ├── domain/                      # Pure business logic
+│   │   ├── Hand.java
+│   │   ├── Card.java, Rank.java, Suit.java
+│   │   ├── Category.java
+│   │   ├── ComparisonResult.java
+│   │   └── Winner.java
+│   ├── port/
+│   │   ├── in/                      # Inbound ports (use cases)
+│   │   │   ├── CompareHandsUseCase.java
+│   │   │   └── ComparisonResponse.java
+│   │   └── out/                     # Outbound ports (dependencies)
+│   │       └── (to be added in tasks)
+│   └── service/
+│       └── CompareHandsService.java # Application service
+│
+├── adapters/                        # OUTSIDE THE HEXAGON
+│   ├── in/                          # Inbound adapters (driving)
+│   │   ├── rest/                    # REST API adapter (IMPLEMENTED)
+│   │   │   ├── RestCompareHandsController.java
+│   │   │   └── CompareHandsRequest.java
+│   │   └── cli/                     # CLI adapter (TASK 2)
+│   │       └── (to be implemented)
+│   └── out/                         # Outbound adapters (driven)
+│       ├── persistence/             # Database adapter (TASK 3)
+│       │   └── (to be implemented)
+│       └── (other adapters)
+│
+└── PokerApplication.java            # Spring Boot main class
+```
 
-**Step 2: 🟢 GREEN** - Fix the bug
-1. Open `Hand.java`, find the `compare()` method
-2. Look at line ~104: `return new ComparisonResult(Winner.BLACK, otherKickers.get(i));`
-3. Fix: Change `Winner.BLACK` to `Winner.WHITE`
-4. Run the test - it should pass
+## 📋 Use Cases
 
-**Step 3: 🔵 REFACTOR** - Clean up if needed
+### ✅ Use Case 1: Compare Hands via Web Interface (IMPLEMENTED)
 
-**Key Lesson:** Code coverage helps identify untested paths where bugs can hide!
+**Business Value:** Players can submit hands through web app and see who wins.
 
-**Expected Test:**
-```java
-@Test
-void shouldReportWhiteWinsWhenWhiteHasHigherCard() {
-    // Given
-    Hand black = Hand.parse("2H 3D 5S 9C KD");
-    Hand white = Hand.parse("2C 3H 4S 8C AH");
-    
-    // When
-    ComparisonResult result = black.compare(white);
-    
-    // Then
-    assertThat(result.getWinner()).isEqualTo(Winner.WHITE);
-    assertThat(result.describe()).isEqualTo("White wins - high card: Ace");
+**Architecture Flow:**
+```
+HTTP Request
+    ↓
+RestCompareHandsController (Adapter - IN)
+    ↓
+CompareHandsUseCase (Port - IN)
+    ↓
+CompareHandsService (Application Service)
+    ↓
+Hand.compare() (Domain Logic)
+    ↓
+ComparisonResponse (Port DTO)
+    ↓
+HTTP Response
+```
+
+**Key Components:**
+
+1. **Inbound Port:** `CompareHandsUseCase`
+   - Interface defining the use case
+   - Domain-centric contract
+   - No HTTP/REST concepts
+
+2. **Application Service:** `CompareHandsService`
+   - Implements the use case
+   - Orchestrates domain logic
+   - Maps between port DTOs and domain objects
+
+3. **REST Adapter:** `RestCompareHandsController`
+   - Translates HTTP requests to use case calls
+   - Handles REST-specific concerns (status codes, JSON)
+   - Depends on port, not on domain directly
+
+**Testing:**
+- `CompareHandsServiceTest` - Unit test (no Spring)
+- `RestCompareHandsControllerTest` - Integration test (with Spring)
+
+**How to Run:**
+```bash
+# Start the application
+./mvnw.sh spring-boot:run
+
+# Test with curl
+curl -X POST http://localhost:8080/api/poker/compare \
+  -H "Content-Type: application/json" \
+  -d '{
+    "black": "AH KD 9C 7D 4S",
+    "white": "KH QD 9C 7D 4S"
+  }'
+
+# Expected response:
+{
+  "winner": "BLACK",
+  "description": "Black wins - high card: Ace"
 }
 ```
 
 ---
 
-### Task 2: Fix Bug & Improve Readability with Builder Pattern (TDD + Refactoring)
+### 🔨 Task 2: Compare Hands via CLI (20 min)
 
-**Problem:** Bug report: *"The losingRank in ComparisonResult is sometimes incorrect!"*
+**Business Need:** Developers need command-line access for testing.
 
-Investigation shows the bug is in `Hand.compare()`:
-```java
-return new ComparisonResult(Winner.BLACK, thisKickers.get(i), thisKickers.get(i));
-//                                         ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
-//                                         Same variable used twice!
+**What to Build:**
+- CLI adapter using Spring Shell
+- Reuse existing `CompareHandsUseCase` port
+- Both REST and CLI work simultaneously
+
+**Acceptance Criteria:**
+```bash
+# Start app
+./mvnw.sh spring-boot:run
+
+# Use CLI
+shell:> compare "AH KD 9C 7D 4S" "KH QD 9C 7D 4S"
+Black wins - high card: Ace
+
+# REST still works
+curl -X POST http://localhost:8080/api/poker/compare ...
 ```
 
-**Root cause:** Three parameters, two of the same type (`Rank`). Easy to copy-paste the wrong variable. The compiler can't catch this because both are `Rank`.
+**Files to Create:**
+- `adapters/in/cli/CliCompareHandsAdapter.java`
 
-**Your Mission:**
+**Dependencies to Add:**
+```xml
+<dependency>
+    <groupId>org.springframework.shell</groupId>
+    <artifactId>spring-shell-starter</artifactId>
+    <version>3.2.0</version>
+</dependency>
+```
 
-**Step 1: 🔴 RED** - Write a test to expose the bug
-1. Open `CompareHighCardHandsTest.java`
-2. Add a test that checks `getLosingRank()`:
-   ```java
-   @Test
-   void shouldSetCorrectLosingRankWhenBlackWins() {
-       Hand black = Hand.parse("AH KD 9C 7D 4S");
-       Hand white = Hand.parse("AH KD 9C 7D 3S");
-       
-       ComparisonResult result = black.compare(white);
-       
-       assertThat(result.getWinningRank()).isEqualTo(Rank.FOUR);
-       assertThat(result.getLosingRank()).isEqualTo(Rank.THREE); // This will fail!
-   }
-   ```
-3. Run the test - it should fail (bug exposed)
-
-**Step 2: 🟢 GREEN** - Fix the bug (but notice the code is still hard to read)
-1. Open `Hand.java`, line ~100
-2. Change `thisKickers.get(i)` to `otherKickers.get(i)` for the third parameter
-3. Run tests - they should pass
-
-**Step 3: 🔵 REFACTOR** - Prevent future bugs with builder pattern
-1. Open `ComparisonResult.java`, add `@Builder` and `@AllArgsConstructor`
-2. Open `Hand.java`, replace all constructor calls with builder:
-   ```java
-   return ComparisonResult.builder()
-       .winner(Winner.BLACK)
-       .winningRank(thisKickers.get(i))
-       .losingRank(otherKickers.get(i))  // Now it's obvious which is which!
-       .build();
-   ```
-3. Run tests - they should still pass
-
-**Key Lessons:**
-- Positional parameters with same types are error-prone
-- Builder pattern makes code self-documenting
-- Named parameters prevent copy-paste mistakes
+**Architecture Insight:** 
+- Same service, different adapter
+- Domain doesn't know about CLI vs REST
+- Demonstrates adapter interchangeability
 
 ---
 
-### Task 3: Remove Boilerplate - Use Lombok in HandRank
+### 🔨 Task 3: Store Comparison History (20 min)
 
-**Problem:** The `HandRank` class contains boilerplate code (constructor, getters). Look at the TODO comment.
+**Business Need:** Store all comparisons for analytics and auditing.
 
-**Your Mission:**
-1. **🟢 GREEN** - Ensure all tests pass before refactoring
-2. **🔵 REFACTOR** - Apply Lombok annotations
-   - Open `HandRank.java`
-   - Remove manual constructor and getters
-   - Add `@Getter` and `@RequiredArgsConstructor`
-3. **🟢 GREEN** - Run tests to ensure they still pass
+**What to Build:**
+- Outbound port: `ComparisonHistoryRepository` interface
+- Adapter: `InMemoryComparisonHistoryRepository` implementation
+- Modify service to save each comparison
 
-**Before (Boilerplate):**
-```java
-public class HandRank {
-    private final Category category;
-    private final List<Rank> kickers;
-    
-    public HandRank(Category category, List<Rank> kickers) { ... }
-    public Category getCategory() { ... }
-    public List<Rank> getKickers() { ... }
-}
+**Architecture:**
+```
+CompareHandsService
+    ↓ (uses)
+ComparisonHistoryRepository (Port - defines what domain needs)
+    ↑ (implements)
+InMemoryComparisonHistoryRepository (Adapter - provides implementation)
 ```
 
-**After (Lombok):**
-```java
-@Getter
-@RequiredArgsConstructor
-public class HandRank {
-    private final Category category;
-    private final List<Rank> kickers;
-}
-```
+**Files to Create:**
+- `app/port/out/ComparisonHistoryRepository.java`
+- `app/port/out/ComparisonHistoryEntry.java`
+- `adapters/out/persistence/InMemoryComparisonHistoryRepository.java`
+
+**Modify:**
+- `app/service/CompareHandsService.java` - inject and use repository
+
+**Architecture Insight:**
+- Domain defines what it needs (port)
+- Adapter provides implementation
+- Easy to swap in-memory → database later
+- Domain stays pure (no persistence logic)
 
 ---
 
-### Task 4: Refactor Tests - Reduce Duplication with Parameterized Tests
+### 🔨 Task 4: View Comparison History (20 min)
 
-**Problem:** The test class has many similar tests that follow the same pattern, making it harder to maintain.
+**Business Need:** Users want to see their past comparisons.
 
-**Your Mission:**
-1. **🟢 GREEN** - Ensure all tests pass before refactoring
-2. **🔵 REFACTOR** - Consolidate similar tests into parameterized tests
-   - Use `@ParameterizedTest` and `@CsvSource`
-   - Example:
-   ```java
-   @ParameterizedTest
-   @CsvSource({
-       "'2H 3D 5S 9C KD', '2C 3H 4S 8C AH', WHITE, 'White wins - high card: Ace'",
-       "'2H 3D 5S 9C KD', '2C 3H 4S 8C KH', BLACK, 'Black wins - high card: 9'"
-   })
-   void shouldCompareHighCardHands(String blackHand, String whiteHand, 
-                                   Winner expectedWinner, String expectedDescription) {
-       // Test implementation
-   }
-   ```
-3. **🟢 GREEN** - Run tests to ensure they still pass
+**What to Build:**
+- Inbound port: `GetComparisonHistoryUseCase`
+- Service: `GetComparisonHistoryService`
+- REST endpoint: `GET /api/poker/history`
+
+**Acceptance Criteria:**
+```bash
+# Compare some hands first
+curl -X POST http://localhost:8080/api/poker/compare ...
+
+# View history
+curl http://localhost:8080/api/poker/history
+
+# Response:
+[
+  {
+    "id": "uuid",
+    "blackHand": "AH KD 9C 7D 4S",
+    "whiteHand": "KH QD 9C 7D 4S",
+    "winner": "BLACK",
+    "description": "Black wins - high card: Ace",
+    "timestamp": "2025-11-06T12:00:00"
+  }
+]
+```
+
+**Files to Create:**
+- `app/port/in/GetComparisonHistoryUseCase.java`
+- `app/service/GetComparisonHistoryService.java`
+- `adapters/in/rest/HistoryController.java`
+
+**Architecture Insight:**
+- New use case, new port
+- Reuses existing outbound port (repository)
+- Shows how multiple use cases share adapters
 
 ---
 
-### Task 5: Fix Immutability Bug - Protect Hand Cards (TDD)
+## 📚 Key Concepts
 
-**Problem:** Bug report: *"We're seeing incorrect comparison results! Sometimes a hand that should win is losing."*
+### Inbound Ports (Use Cases)
+- Define what the application **provides** to the outside world
+- Interfaces in `app/port/in/`
+- Example: `CompareHandsUseCase`, `GetComparisonHistoryUseCase`
 
-**Your investigation:**
-After debugging, you discovered the root cause:
-```java
-// Client code somewhere in the system
-Hand hand = Hand.parse("AH KD 9C 7D 4S");
-hand.getCards().clear(); // Oops! Hand is now empty
-// Later comparisons fail because the hand has no cards!
-```
+### Outbound Ports (Dependencies)
+- Define what the application **needs** from the outside world
+- Interfaces in `app/port/out/`
+- Example: `ComparisonHistoryRepository`
 
-**Root cause:** `Hand.getCards()` returns a mutable list. Client code can accidentally (or intentionally) modify the hand's internal state, breaking the comparison logic.
+### Inbound Adapters (Driving)
+- Translate external requests into use case calls
+- In `adapters/in/`
+- Example: REST controllers, CLI, message consumers
 
-**Your Mission:**
+### Outbound Adapters (Driven)
+- Implement outbound ports
+- In `adapters/out/`
+- Example: Database repositories, external API clients
 
-**Step 1: 🔴 RED** - Write tests that demonstrate the vulnerability
-```java
-@Test
-void shouldReturnUnmodifiableCardsList() {
-    Hand hand = Hand.parse("AH KD 9C 7D 4S");
-    
-    assertThatThrownBy(() -> hand.getCards().clear())
-        .isInstanceOf(UnsupportedOperationException.class);
-}
+### Domain
+- Pure business logic
+- No framework dependencies
+- Example: `Hand`, `Card`, comparison logic
 
-@Test
-void shouldNotAllowAddingCards() {
-    Hand hand = Hand.parse("AH KD 9C 7D 4S");
-    Card newCard = new Card(Rank.TWO, Suit.HEARTS);
-    
-    assertThatThrownBy(() -> hand.getCards().add(newCard))
-        .isInstanceOf(UnsupportedOperationException.class);
-}
-```
-Run tests - they will fail (vulnerability exposed)
-
-**Step 2: 🟢 GREEN** - Fix the implementation
-1. Open `Hand.java`
-2. Override Lombok's generated `getCards()` method
-3. Return `Collections.unmodifiableList(cards)` instead
-4. Add import: `import java.util.Collections;`
-
-```java
-// Override Lombok's generated getter
-public List<Card> getCards() {
-    return Collections.unmodifiableList(cards);
-}
-```
-
-**Step 3: 🔵 REFACTOR** - Verify the solution is clean
-
-**Key Lesson:** Always return defensive copies or unmodifiable collections from getters to protect internal state!
+### Application Services
+- Orchestrate use cases
+- Implement inbound ports
+- Use outbound ports
+- In `app/service/`
 
 ---
-
-### Task 6: Remove Implementation-Tied Tests (Behavioral Testing)
-
-**Problem:** The `rank()` method is currently public and has its own test class (`HandRankTest`) that checks internal implementation details (`HandRank` structure) rather than observable behavior (comparison results).
-
-**Why this matters:** 
-- The `rank()` method is an implementation detail used internally by `compare()`
-- Testing implementation details creates brittle tests that break when you refactor internal code, even if behavior stays correct
-- Behavioral tests are more resilient and provide better confidence
-
-**Your Mission:**
-
-**Step 1: Remove Implementation Tests**
-1. Open `Hand.java` and change `rank()` from `public` to `private`
-2. Delete the entire `HandRankTest.java` file
-3. Run remaining tests - they should all still pass
-4. (Optional) Run tests with coverage - observe that `rank()` is still 100% covered through the `compare()` method calls in `CompareHighCardHandsTest`
-
-**Step 2: Demonstrate the Benefit - Refactor HandRank to a Record**
-
-Now that we don't have brittle implementation tests, let's do a refactoring that would have broken them:
-
-1. Open `HandRank.java`
-2. Convert the class to a modern Java record:
-   ```java
-   public record HandRank(Category category, List<Rank> kickers) {}
-   ```
-3. Delete all the boilerplate (constructor, getters, fields)
-4. Run tests - they should all still pass!
-
-**Observation:** If we still had `HandRankTest`, this refactoring might have broken it (depending on how the test was written). But our behavioral tests in `CompareHighCardHandsTest` don't care about the internal structure - they only care that comparisons work correctly!
-
-**Key Insight:** 
-- ❌ **Implementation test:** Calls `hand.rank()` and checks `rank.getKickers().containsExactly(ACE, KING...)` - brittle, breaks on internal changes
-- ✅ **Behavioral test:** Calls `black.compare(white)` and checks `result.describe().equals("White wins - high card: Ace")` - resilient, only breaks when behavior changes
-
-**Follow-up Discussion: What other refactorings would break implementation tests?**
-
-Consider these scenarios where behavioral tests would remain green but implementation tests might break:
-
-1. **Change kickers storage from List to Array:**
-   ```java
-   // Store as array internally, convert to list in getter
-   private Rank[] kickers;
-   public List<Rank> getKickers() { return Arrays.asList(kickers); }
-   ```
-   Implementation tests checking list type would break, but behavior is unchanged.
-
-2. **Change kickers sort order (ascending instead of descending):**
-   ```java
-   // Sort ascending, then reverse during comparison
-   List<Rank> kickers = cards.stream()
-       .sorted(Comparator.comparingInt(Rank::getValue)) // ascending
-   ```
-   Tests checking exact order would break, but comparison logic still works.
-
-3. **Inline the rank() method entirely:**
-   Remove `rank()` and `HandRank`, do comparison directly in `compare()`.
-   All tests calling `rank()` would break, but comparison behavior is unchanged.
-
-4. **Add caching/memoization:**
-   ```java
-   private HandRank cachedRank;
-   private HandRank rank() {
-       if (cachedRank == null) cachedRank = calculateRank();
-       return cachedRank;
-   }
-   ```
-   Tests expecting fresh objects would break, but behavior is unchanged.
-
-**Key Lesson:** Behavioral tests give you the freedom to refactor implementation details without breaking tests. This is crucial for maintaining a healthy, evolvable codebase!
-
-## 🛠️ Technical Requirements
-
-### Required Technologies
-- **Java 21**
-- **Maven** - Build tool
-- **JUnit 5** - Testing framework (including `@ParameterizedTest`)
-- **AssertJ** - Fluent assertions
-- **Lombok** - Reduce boilerplate code
-
-### Key Patterns You'll Use
-
-**Lombok Annotations:**
-```java
-@Getter                      // Generate getters
-@RequiredArgsConstructor     // Constructor with final fields
-@Builder                     // Builder pattern
-@AllArgsConstructor          // Constructor with all fields
-```
-
-**Parameterized Tests:**
-```java
-@ParameterizedTest
-@CsvSource({
-    "'hand1', 'hand2', EXPECTED_WINNER, 'expected description'",
-    "'hand3', 'hand4', EXPECTED_WINNER, 'expected description'"
-})
-void testName(String hand1, String hand2, Winner winner, String description) {
-    // Test implementation
-}
-```
-
-**AssertJ Assertions:**
-```java
-assertThat(result.getWinner()).isEqualTo(Winner.WHITE);
-assertThat(result.describe()).isEqualTo("White wins - high card: Ace");
-assertThatThrownBy(() -> list.clear())
-    .isInstanceOf(UnsupportedOperationException.class);
-```
-
-**Immutability:**
-```java
-// Return unmodifiable collections
-public List<Rank> getKickers() {
-    return Collections.unmodifiableList(kickers);
-}
-```
 
 ## 🚀 Getting Started
 
-### Prerequisites
-Make sure Java 21 is installed and JAVA_HOME is set:
+### 1. Study the Reference Implementation
 
 ```bash
-# Check Java version
-java -version
-
-# Set JAVA_HOME (add to your ~/.zshrc or ~/.bash_profile)
-export JAVA_HOME=$(/usr/libexec/java_home -v 21)
-```
-
-### Run Tests
-
-```bash
-# Run all tests
+# Run tests to see it works
 ./mvnw.sh test
 
-# Run Story 2 tests only
-./mvnw.sh test -Dtest=CompareHighCardHandsTest
+# Start the application
+./mvnw.sh spring-boot:run
 
-# Clean and test
-./mvnw.sh clean test
+# Test REST API
+curl -X POST http://localhost:8080/api/poker/compare \
+  -H "Content-Type: application/json" \
+  -d '{"black": "AH KD 9C 7D 4S", "white": "KH QD 9C 7D 4S"}'
 ```
 
-**Expected Initial State:**
-- ✅ 6 tests passing in CompareHighCardHandsTest (4 comparison tests) + HandRankTest (2 ranking tests)
-- ❌ Missing test for "White wins" scenario (Task 1)
-- ⚠️ `rank()` method is public (should be private - Task 6)
+### 2. Explore the Code
 
-### How to Complete the Tasks
+**Start with:**
+1. `app/port/in/CompareHandsUseCase.java` - The port definition
+2. `app/service/CompareHandsService.java` - The service implementation
+3. `adapters/in/rest/RestCompareHandsController.java` - The REST adapter
 
-Follow the tasks in order (1 → 2 → 3 → 4 → 5 → 6). Each task has:
-- **TODO comments** in the code to guide you
-- **Clear instructions** in the task description above
-- **Expected outcomes** to verify your work
+**Notice:**
+- Port is just an interface (no implementation details)
+- Service depends on port, not on adapter
+- Adapter translates HTTP → port calls
+- Domain (`Hand.java`) has no Spring annotations
 
-**Look for TODO comments:**
-```bash
-# Find all TODOs in the code
-grep -r "TODO:" src/
-```
+### 3. Complete Tasks in Order
 
-**Files with TODOs:**
-- `CompareHighCardHandsTest.java` - Tasks 1, 2, 4
-- `HandRank.java` - Task 3
-- `Hand.java` - Task 2
-- `ComparisonResult.java` - Task 2
-- `Hand.java` - Task 5 (immutability)
-- `Hand.java` - Task 6 (make rank() private)
-- `HandRankTest.java` - Task 6 (delete this file)
+Start with Task 2 (CLI), then Task 3 (persistence), then Task 4 (history view).
 
-## 📁 Project Structure
-
-```
-src/
-├── main/java/org/example/poker/
-│   ├── Card.java               # Single card (rank + suit)
-│   ├── Rank.java               # Card ranks enum (2-A)
-│   ├── Suit.java               # Card suits enum (C,D,H,S)
-│   ├── Hand.java               # 5-card hand with compare logic - Task 2, 5, 6
-│   ├── Category.java           # Hand categories (HIGH_CARD)
-│   ├── HandRank.java           # Ranking result (category + kickers) - Task 3
-│   ├── Winner.java             # Winner enum (BLACK, WHITE, TIE)
-│   └── ComparisonResult.java   # Comparison result with description - Task 2
-└── test/java/org/example/poker/
-    ├── HandRankTest.java              # Implementation tests - DELETE in Task 6
-    └── CompareHighCardHandsTest.java  # Behavioral tests - Tasks 1, 2, 4
-```
-
-## 📊 Progress Tracking
-
-- [ ] **Task 1:** Write test for White wins + fix bug (TDD)
-- [ ] **Task 2:** Write test for losingRank bug + fix + refactor with builder (TDD + Refactoring)
-- [ ] **Task 3:** Remove boilerplate from HandRank using Lombok
-- [ ] **Task 4:** Refactor tests to parameterized tests
-- [ ] **Task 5:** Write test for immutability + fix Hand.getCards() (TDD)
-- [ ] **Task 6:** Remove implementation-tied tests (behavioral testing)
-
-## 🔄 TDD & Refactoring Workflow
-
-### Tasks 1, 2, 5: Test-Driven Development (TDD)
-1. **🔴 RED** - Write a failing test first
-2. **🟢 GREEN** - Write minimal code to make it pass
-3. **🔵 REFACTOR** - Clean up the code
-
-**Key principle:** Let tests drive your implementation!
-
-**Task 2 combines TDD + Refactoring:** Write test → Fix bug → Refactor with builder
-
-### Tasks 3, 4, 6: Refactoring Discipline
-1. **🟢 GREEN** - Ensure all tests pass before refactoring
-2. **🔵 REFACTOR** - Change implementation/tests without changing behavior
-3. **🟢 GREEN** - Verify all tests still pass
-
-**Key principle:** Tests protect you during refactoring!
-
-## 💡 Tips
-
-- **Task 1:** Look at existing comparison tests for the pattern; check coverage first
-- **Task 2:** Write test for `getLosingRank()` first; builder makes parameters explicit
-- **Task 3:** Look at other classes (Card, Rank, Suit) for Lombok examples
-- **Task 4:** Use `@ParameterizedTest` with `@CsvSource` - check JUnit 5 docs
-- **Task 5:** Use `Collections.unmodifiableList()` to wrap the list; override Lombok's getter
-- **Task 6:** Notice which tests check internal structure vs observable behavior; run with coverage to verify `rank()` is still covered
-- **Run tests frequently** - Get immediate feedback after each change
-- **Follow TODO comments** - They guide you step by step
-
-## 🆘 Common Issues
-
-**Tests not running?**
-```bash
-# Make sure JAVA_HOME is set
-export JAVA_HOME=$(/usr/libexec/java_home -v 21)
-
-# Try cleaning first
-./mvnw.sh clean test
-```
-
-**Lombok not working?**
-- Rebuild the project after adding annotations
-- Check that Lombok is in pom.xml
-- Ensure your IDE has Lombok plugin installed
-
-**Parameterized tests not working?**
-- Import: `org.junit.jupiter.params.ParameterizedTest`
-- Import: `org.junit.jupiter.params.provider.CsvSource`
-- Check the syntax of your `@CsvSource` carefully
-
-**Can't import Collections?**
-- Add: `import java.util.Collections;`
-
-## 🎯 Success Criteria
-
-You've completed the kata when:
-- ✅ All 6 tasks completed in order
-- ✅ All tests passing (including new tests from Tasks 1, 2 & 5)
-- ✅ ComparisonResult uses builder pattern (Task 2)
-- ✅ HandRank uses Lombok annotations (Task 3)
-- ✅ Tests use parameterized tests where appropriate (Task 4)
-- ✅ Hand.getCards() returns unmodifiable list (Task 5)
-- ✅ Implementation-tied tests removed and `rank()` is private (Task 6)
-- ✅ No compilation errors or warnings
-- ✅ Code is clean and readable
-
-## 💬 Discussion Points
-
-After completing all tasks, reflect on:
-- **Task 1:** How did TDD help you catch bugs early?
-- **Task 2:** When should you use builder pattern vs constructors?
-- **Task 3:** How much boilerplate did Lombok eliminate?
-- **Task 4:** What are the benefits of parameterized tests?
-- **Task 5:** Why is immutability important in domain objects?
-- **Task 6:** Why are behavioral tests more resilient than implementation-tied tests?
+Each task builds on the previous one and reinforces hexagonal architecture concepts.
 
 ---
 
-**Ready to start?** Run `./mvnw.sh test -Dtest=CompareHighCardHandsTest` and begin with Task 1! 🚀
+## 💡 Tips
+
+### For Task 2 (CLI):
+- Use `@ShellComponent` annotation
+- Use `@ShellMethod` for commands
+- Inject `CompareHandsUseCase` (same as REST controller does)
+- CLI and REST both use the same service!
+
+### For Task 3 (Persistence):
+- Start with the port interface (what does domain need?)
+- Keep it simple: `save()` and `findAll()`
+- Use `Map<UUID, Entry>` for in-memory storage
+- Service should depend on port, not implementation
+
+### For Task 4 (History):
+- New use case = new inbound port
+- Reuse outbound port from Task 3
+- Service calls repository through port
+- REST controller calls service through port
+
+---
+
+## 🎯 Hexagonal Architecture Benefits
+
+### 1. Technology Independence
+- Domain logic (Hand comparison) has zero dependencies on Spring, HTTP, or databases
+- Can test domain without any infrastructure
+- Can swap REST for GraphQL without touching domain
+
+### 2. Testability
+- Domain tests: Pure unit tests, fast, no mocks needed
+- Service tests: Test with mock ports
+- Adapter tests: Integration tests with real infrastructure
+
+### 3. Flexibility
+- Multiple UIs (REST + CLI) using same service
+- Easy to add new adapters (mobile app, message queue)
+- Easy to swap implementations (in-memory → PostgreSQL)
+
+### 4. Clear Boundaries
+- **Domain:** What the system does (business rules)
+- **Ports:** How to interact with domain (contracts)
+- **Adapters:** Technical details (HTTP, DB, CLI)
+
+### 5. Maintainability
+- Changes in REST API don't affect domain
+- Changes in database don't affect use cases
+- Each layer has single responsibility
+
+---
+
+## 🛠️ Testing Strategy
+
+### Domain Tests (Existing)
+```
+CompareHighCardHandsTest
+ComparePairHandsTest
+...
+```
+- Test pure business logic
+- No infrastructure dependencies
+- Fast, reliable, focused
+
+### Service Tests
+```
+CompareHandsServiceTest
+```
+- Test use case orchestration
+- Mock outbound ports if needed
+- No Spring context required
+
+### Adapter Tests
+```
+RestCompareHandsControllerTest
+```
+- Test complete flow
+- Use Spring Boot test context
+- Verify HTTP/JSON handling
+
+---
+
+## ✅ Success Criteria
+
+You've completed the kata when:
+
+- ✅ All tests pass (123 tests)
+- ✅ REST API works for comparison
+- ✅ CLI works for comparison (both simultaneously)
+- ✅ Comparisons are saved to history
+- ✅ History can be retrieved via REST API
+- ✅ Domain layer has no framework dependencies
+- ✅ Ports define clear contracts
+- ✅ Adapters are interchangeable
+
+---
+
+## 🤔 Discussion Questions
+
+After completing the kata, discuss:
+
+1. **What would change if we swap in-memory storage for PostgreSQL?**
+   - Only the adapter implementation
+   - Port stays the same
+   - Service stays the same
+   - Domain stays the same
+
+2. **How would you add a GraphQL adapter?**
+   - Create new adapter in `adapters/in/graphql/`
+   - Reuse existing `CompareHandsUseCase` port
+   - No changes to service or domain
+
+3. **Why keep domain pure (no Spring annotations)?**
+   - Testable without infrastructure
+   - Framework-independent
+   - Business logic is explicit
+   - Can use domain in any context
+
+4. **What's the benefit of ports?**
+   - Clear contracts
+   - Dependency inversion
+   - Adapter interchangeability
+   - Testability with mocks
+
+---
+
+## 📖 Further Reading
+
+- **Hexagonal Architecture** by Alistair Cockburn
+- **Clean Architecture** by Robert C. Martin
+- **Domain-Driven Design** by Eric Evans
+- **Growing Object-Oriented Software, Guided by Tests** by Freeman & Pryce
+
+---
+
+**Ready to start? Begin with studying Use Case 1, then implement Task 2!** 🚀

@@ -1,4 +1,4 @@
-package org.example.poker;
+package org.example.poker.app.domain;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
