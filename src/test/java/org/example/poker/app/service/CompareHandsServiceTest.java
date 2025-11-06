@@ -1,18 +1,27 @@
 package org.example.poker.app.service;
 
 import org.example.poker.app.domain.ComparisonResult;
-import org.example.poker.app.domain.Winner;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Unit test for CompareHandsService.
- * Tests the service layer in isolation (no Spring context needed).
- * Service now returns domain objects (ComparisonResult) directly.
+ * Tests the service layer orchestration (no Spring context needed).
+ * 
+ * Focus: Verify that the service correctly orchestrates domain logic.
+ * - Parses hand strings and delegates to domain
+ * - Returns domain objects (ComparisonResult)
+ * - Propagates domain exceptions
+ * 
+ * Note: Business rules (comparison logic) are tested in domain tests.
  */
+@DisplayName("CompareHandsService - Orchestration Tests")
 class CompareHandsServiceTest {
     
     private CompareHandsService service;
@@ -23,51 +32,32 @@ class CompareHandsServiceTest {
     }
     
     @Test
-    void shouldCompareHighCardHands() {
-        ComparisonResult result = service.compareHands(
-                "AH KD 9C 7D 4S",
-                "KH QD 9C 7D 4S"
-        );
+    @DisplayName("Should delegate to domain and return ComparisonResult")
+    void shouldDelegateToDomainAndReturnComparisonResult() {
+        // Given: Valid hand strings
+        String blackHand = "AH KD 9C 7D 4S";
+        String whiteHand = "KH QD 9C 7D 4S";
         
-        assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
-        assertThat(result.describe()).isEqualTo("Black wins - high card: Ace");
-    }
-    
-    @Test
-    void shouldReturnTieForEqualHands() {
-        ComparisonResult result = service.compareHands(
-                "2H 3D 5S 9C KD",
-                "2D 3H 5C 9S KH"
-        );
+        // When: Service orchestrates comparison
+        ComparisonResult result = service.compareHands(blackHand, whiteHand);
         
-        assertThat(result.getWinner()).isEqualTo(Winner.TIE);
-        assertThat(result.describe()).isEqualTo("Tie");
+        // Then: Returns domain object with comparison result
+        assertThat(result).isNotNull();
+        assertThat(result.getWinner()).isNotNull();
+        assertThat(result.describe()).isNotEmpty();
     }
     
-    @Test
-    void shouldThrowExceptionForInvalidBlackHand() {
-        assertThatThrownBy(() -> service.compareHands(
-                "INVALID",
-                "KH QD 9C 7D 4S"
-        )).isInstanceOf(IllegalArgumentException.class);
-    }
-    
-    @Test
-    void shouldThrowExceptionForInvalidWhiteHand() {
-        assertThatThrownBy(() -> service.compareHands(
-                "AH KD 9C 7D 4S",
-                "INVALID"
-        )).isInstanceOf(IllegalArgumentException.class);
-    }
-    
-    @Test
-    void shouldComparePairVsHighCard() {
-        ComparisonResult result = service.compareHands(
-                "2H 2D 5S 9C KD",
-                "3C 4H 5C 8C AH"
-        );
-        
-        assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
-        assertThat(result.describe()).isEqualTo("Black wins - pair");
+    @ParameterizedTest
+    @CsvSource({
+        "INVALID,     'KH QD 9C 7D 4S'",  // Invalid black hand
+        "'AH KD 9C 7D 4S', INVALID",       // Invalid white hand
+        "'AH KD 9C 7D',    'KH QD 9C 7D 4S'",  // Wrong number of cards
+        "'AH AH 9C 7D 4S', 'KH QD 9C 7D 4S'"   // Duplicate card
+    })
+    @DisplayName("Should propagate domain validation errors")
+    void shouldPropagateDomainValidationErrors(String blackHand, String whiteHand) {
+        // When/Then: Service propagates domain exceptions
+        assertThatThrownBy(() -> service.compareHands(blackHand, whiteHand))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
