@@ -1,10 +1,10 @@
-package org.example.poker.app.service;
+package org.example.poker.app.port.in;
 
 import org.example.poker.app.domain.ComparisonHistoryEntry;
 import org.example.poker.app.domain.ComparisonResult;
 import org.example.poker.app.domain.Winner;
-import org.example.poker.app.port.in.GetComparisonHistoryUseCase;
 import org.example.poker.app.port.out.ComparisonHistoryRepository;
+import org.example.poker.app.service.GetComparisonHistoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,15 +16,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit test for GetComparisonHistoryService.
- * Tests the service orchestration (no Spring context needed).
+ * Tests for the GetComparisonHistory use case orchestration.
  * 
- * Focus: Verify that the service correctly orchestrates:
+ * This test suite verifies use case responsibilities:
  * - Delegates to repository to fetch history
  * - Returns domain objects
+ * 
+ * Note: Tests through the port interface (GetComparisonHistoryUseCase),
+ * not the concrete service implementation.
  */
-@DisplayName("GetComparisonHistoryService - Orchestration Tests")
-class GetComparisonHistoryServiceTest {
+@DisplayName("Use Case: Get Comparison History - Orchestration")
+class GetComparisonHistoryUseCaseTest {
     
     private ComparisonHistoryRepository mockRepository;
     private GetComparisonHistoryUseCase useCase;
@@ -70,8 +72,9 @@ class GetComparisonHistoryServiceTest {
         List<ComparisonHistoryEntry> history = useCase.getHistory();
         
         // Then: Returns all entries from repository
-        assertThat(history).hasSize(2);
-        assertThat(history).containsExactly(entry1, entry2);
+        assertThat(history)
+                .hasSize(2)
+                .containsExactly(entry1, entry2);
         verify(mockRepository).findAll();
     }
     
