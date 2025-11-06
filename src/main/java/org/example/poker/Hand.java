@@ -80,15 +80,32 @@ public class Hand {
                 .map(Card::getRank)
                 .collect(Collectors.groupingBy(r -> r, Collectors.counting()));
         
-        // Check for pair
-        var pair = rankCounts.entrySet().stream()
+        // Find all pairs
+        var pairs = rankCounts.entrySet().stream()
                 .filter(e -> e.getValue() == 2)
                 .map(Map.Entry::getKey)
-                .findFirst();
+                .sorted(Comparator.comparingInt(Rank::getValue).reversed())
+                .toList();
         
-        if (pair.isPresent()) {
+        // Check for two pair
+        if (pairs.size() == 2) {
+            // TWO_PAIR: [highPairRank, lowPairRank, kicker]
+            Rank highPair = pairs.get(0);
+            Rank lowPair = pairs.get(1);
+            Rank kicker = cards.stream()
+                    .map(Card::getRank)
+                    .filter(r -> !r.equals(highPair) && !r.equals(lowPair))
+                    .findFirst()
+                    .orElseThrow();
+            
+            List<Rank> allRanks = List.of(highPair, lowPair, kicker);
+            return new HandRank(Category.TWO_PAIR, allRanks);
+        }
+        
+        // Check for one pair
+        if (pairs.size() == 1) {
             // ONE_PAIR: [pairRank, kicker1, kicker2, kicker3]
-            Rank pairRank = pair.get();
+            Rank pairRank = pairs.get(0);
             List<Rank> kickers = cards.stream()
                     .map(Card::getRank)
                     .filter(r -> !r.equals(pairRank))

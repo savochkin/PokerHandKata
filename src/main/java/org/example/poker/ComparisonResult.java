@@ -19,18 +19,22 @@ public class ComparisonResult {
         }
         
         String winnerName = winner == Winner.BLACK ? "Black" : "White";
+        String categoryName = getCategoryName(category);
         
-        if (category == Category.ONE_PAIR) {
-            if (winningRank == null) {
-                return winnerName + " wins - pair";
-            }
-            String rankName = formatRankName(winningRank);
-            return winnerName + " wins - pair: " + rankName;
+        if (winningRank == null) {
+            return winnerName + " wins - " + categoryName;
         }
         
-        // HIGH_CARD
         String rankName = formatRankName(winningRank);
-        return winnerName + " wins - high card: " + rankName;
+        return winnerName + " wins - " + categoryName + ": " + rankName;
+    }
+    
+    private String getCategoryName(Category category) {
+        return switch (category) {
+            case HIGH_CARD -> "high card";
+            case ONE_PAIR -> "pair";
+            case TWO_PAIR -> "two pair";
+        };
     }
     
     private String formatRankName(Rank rank) {
