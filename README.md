@@ -44,7 +44,7 @@ src/main/java/org/example/poker/
 │   │   ├── in/                      # Inbound ports (use cases)
 │   │   │   └── CompareHandsUseCase.java
 │   │   └── out/                     # Outbound ports (dependencies)
-│   │       └── (to be added in tasks)
+│   │       └── ComparisonHistoryRepository.java (IMPLEMENTED)
 │   └── service/
 │       └── CompareHandsService.java # Application service
 │
@@ -54,12 +54,11 @@ src/main/java/org/example/poker/
 │   │   │   ├── RestCompareHandsController.java
 │   │   │   ├── CompareHandsRequest.java (REST input DTO)
 │   │   │   └── CompareHandsResponse.java (REST output DTO)
-│   │   └── cli/                     # CLI adapter (TASK 2)
-│   │       └── (to be implemented)
+│   │   └── cli/                     # CLI adapter (IMPLEMENTED)
+│   │       └── CliCompareHandsAdapter.java
 │   └── out/                         # Outbound adapters (driven)
-│       ├── persistence/             # Database adapter (TASK 3)
-│       │   └── (to be implemented)
-│       └── (other adapters)
+│       └── persistence/             # Persistence adapter (IMPLEMENTED)
+│           └── InMemoryComparisonHistoryRepository.java
 │
 └── PokerApplication.java            # Spring Boot main class
 ```
@@ -108,7 +107,7 @@ HTTP Response (JSON)
    - Depends on port, not on domain directly
 
 **Testing:**
-- `CompareHandsServiceTest` - Unit test (no Spring)
+- `CompareHandsUseCaseTest` - Use case tests (107 tests, no Spring)
 - `RestCompareHandsControllerTest` - Integration test (with Spring)
 
 **How to Run:**
@@ -133,16 +132,16 @@ curl -X POST http://localhost:8080/api/poker/compare \
 
 ---
 
-### 🔨 Task 2: Compare Hands via CLI (20 min)
+### ✅ Task 2: Compare Hands via CLI (IMPLEMENTED)
 
 **Business Need:** Developers need command-line access for testing.
 
-**What to Build:**
-- CLI adapter using Spring Shell
-- Reuse existing `CompareHandsUseCase` port
-- Both REST and CLI work simultaneously
+**What Was Built:**
+- ✅ CLI adapter using Spring Shell (`CliCompareHandsAdapter`)
+- ✅ Reuses existing `CompareHandsUseCase` port
+- ✅ REST and CLI work simultaneously
 
-**Acceptance Criteria:**
+**How to Use:**
 ```bash
 # Start app
 ./mvnw.sh spring-boot:run
@@ -151,14 +150,15 @@ curl -X POST http://localhost:8080/api/poker/compare \
 shell:> compare "AH KD 9C 7D 4S" "KH QD 9C 7D 4S"
 Black wins - high card: Ace
 
-# REST still works
+# REST still works simultaneously
 curl -X POST http://localhost:8080/api/poker/compare ...
 ```
 
-**Files to Create:**
+**Files Created:**
 - `adapters/in/cli/CliCompareHandsAdapter.java`
+- `adapters/in/cli/CliCompareHandsAdapterTest.java`
 
-**Dependencies to Add:**
+**Dependencies Added:**
 ```xml
 <dependency>
     <groupId>org.springframework.shell</groupId>
@@ -167,21 +167,22 @@ curl -X POST http://localhost:8080/api/poker/compare ...
 </dependency>
 ```
 
-**Architecture Insight:** 
-- Same service, different adapter
-- Domain doesn't know about CLI vs REST
-- Demonstrates adapter interchangeability
+**Architecture Insight Demonstrated:** 
+- ✅ Same service, different adapter
+- ✅ Domain doesn't know about CLI vs REST
+- ✅ Adapter interchangeability in action
 
 ---
 
-### 🔨 Task 3: Store Comparison History (20 min)
+### ✅ Task 3: Store Comparison History (IMPLEMENTED)
 
 **Business Need:** Store all comparisons for analytics and auditing.
 
-**What to Build:**
-- Outbound port: `ComparisonHistoryRepository` interface
-- Adapter: `InMemoryComparisonHistoryRepository` implementation
-- Modify service to save each comparison
+**What Was Built:**
+- ✅ Outbound port: `ComparisonHistoryRepository` interface
+- ✅ Domain object: `ComparisonHistoryEntry`
+- ✅ Adapter: `InMemoryComparisonHistoryRepository` implementation
+- ✅ Service modified to save each comparison
 
 **Architecture:**
 ```
@@ -192,19 +193,21 @@ ComparisonHistoryRepository (Port - defines what domain needs)
 InMemoryComparisonHistoryRepository (Adapter - provides implementation)
 ```
 
-**Files to Create:**
-- `app/port/out/ComparisonHistoryRepository.java`
-- `app/port/out/ComparisonHistoryEntry.java`
-- `adapters/out/persistence/InMemoryComparisonHistoryRepository.java`
+**Files Created:**
+- `app/domain/ComparisonHistoryEntry.java` (domain object)
+- `app/port/out/ComparisonHistoryRepository.java` (outbound port)
+- `adapters/out/persistence/InMemoryComparisonHistoryRepository.java` (adapter)
+- `adapters/out/persistence/InMemoryComparisonHistoryRepositoryTest.java` (tests)
 
-**Modify:**
-- `app/service/CompareHandsService.java` - inject and use repository
+**Modified:**
+- `app/service/CompareHandsService.java` - now injects and uses repository
 
-**Architecture Insight:**
-- Domain defines what it needs (port)
-- Adapter provides implementation
-- Easy to swap in-memory → database later
-- Domain stays pure (no persistence logic)
+**Architecture Insights Demonstrated:**
+- ✅ Domain defines what it needs (port)
+- ✅ Adapter provides implementation
+- ✅ Easy to swap in-memory → database later
+- ✅ Domain stays pure (no persistence logic)
+- ✅ Dependency inversion in action
 
 ---
 
@@ -406,16 +409,18 @@ RestCompareHandsControllerTest
 
 ## ✅ Success Criteria
 
-You've completed the kata when:
+Current Progress:
 
-- ✅ All tests pass (123 tests)
+- ✅ All tests pass (120 tests)
 - ✅ REST API works for comparison
 - ✅ CLI works for comparison (both simultaneously)
 - ✅ Comparisons are saved to history
-- ✅ History can be retrieved via REST API
+- ⏳ History can be retrieved via REST API (Task 4 - TODO)
 - ✅ Domain layer has no framework dependencies
 - ✅ Ports define clear contracts
 - ✅ Adapters are interchangeable
+
+**Tasks Completed: 3/4**
 
 ---
 

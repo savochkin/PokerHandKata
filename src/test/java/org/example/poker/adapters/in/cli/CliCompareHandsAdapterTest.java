@@ -39,9 +39,9 @@ class CliCompareHandsAdapterTest {
         // Given: Mock use case returns a result
         ComparisonResult mockResult = ComparisonResult.builder()
                 .winner(Winner.BLACK)
-                .category(null)
-                .winningRank(null)
-                .losingRank(null)
+                .category(org.example.poker.app.domain.Category.HIGH_CARD)
+                .winningRank(org.example.poker.app.domain.Rank.ACE)
+                .losingRank(org.example.poker.app.domain.Rank.KING)
                 .build();
         when(mockUseCase.compareHands("AH KD 9C 7D 4S", "KH QD 9C 7D 4S"))
                 .thenReturn(mockResult);
@@ -51,7 +51,7 @@ class CliCompareHandsAdapterTest {
         
         // Then: Use case was called and result formatted
         verify(mockUseCase).compareHands("AH KD 9C 7D 4S", "KH QD 9C 7D 4S");
-        assertThat(output).isNotNull();
+        assertThat(output).isEqualTo("Black wins - high card: Ace");
     }
     
     @ParameterizedTest

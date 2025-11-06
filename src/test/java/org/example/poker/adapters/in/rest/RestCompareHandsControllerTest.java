@@ -15,7 +15,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration test for REST adapter.
  * Tests the complete flow: REST request → Controller → Service → Domain → Response
  */
-@SpringBootTest
+@SpringBootTest(properties = {
+    "spring.shell.interactive.enabled=false"
+})
 @AutoConfigureMockMvc
 class RestCompareHandsControllerTest {
     

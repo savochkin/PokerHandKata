@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: poker-hand-comparison
+  shell:
+    interactive:
+      enabled: true
 
 logging:
   level:
