@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +15,11 @@ import java.util.stream.Collectors;
 @Builder
 public class Hand {
     private final List<Card> cards;
+
+    // Override Lombok's generated getter to return unmodifiable list
+    public List<Card> getCards() {
+        return Collections.unmodifiableList(cards);
+    }
 
     private void validate() {
         if (cards.size() != 5) {
@@ -67,13 +73,13 @@ public class Hand {
         return hand;
     }
 
-    public HandRank rank() {
+    private HandRank rank() {
         // Story 2: Assume all hands are High Card
         // Sort cards by rank descending to get kickers
         List<Rank> kickers = cards.stream()
                 .map(Card::getRank)
                 .sorted(Comparator.comparingInt(Rank::getValue).reversed())
-                .collect(Collectors.toList());
+                .toList();
         
         return new HandRank(Category.HIGH_CARD, kickers);
     }
@@ -83,8 +89,8 @@ public class Hand {
         HandRank otherRank = other.rank();
         
         // Compare kickers lexicographically
-        List<Rank> thisKickers = thisRank.getKickers();
-        List<Rank> otherKickers = otherRank.getKickers();
+        List<Rank> thisKickers = thisRank.kickers();
+        List<Rank> otherKickers = otherRank.kickers();
         
         for (int i = 0; i < thisKickers.size(); i++) {
             int comparison = Integer.compare(
@@ -93,17 +99,24 @@ public class Hand {
             );
             
             if (comparison > 0) {
-                // TODO: Task 5 - Three parameters, two of the same type (Rank)!
-                // BUG: Accidentally used thisKickers twice! Easy mistake with positional params.
-                // Builder pattern would make this obvious: .winningRank(...).losingRank(...)
-                return new ComparisonResult(Winner.BLACK, thisKickers.get(i), thisKickers.get(i));
+                return ComparisonResult.builder()
+                        .winner(Winner.BLACK)
+                        .winningRank(thisKickers.get(i))
+                        .losingRank(otherKickers.get(i))
+                        .build();
             } else if (comparison < 0) {
-                // TODO: Task 1 - Fix the bug
-                // BUG: Always returning BLACK instead of WHITE!
-                return new ComparisonResult(Winner.BLACK, otherKickers.get(i), thisKickers.get(i));
+                return ComparisonResult.builder()
+                        .winner(Winner.WHITE)
+                        .winningRank(otherKickers.get(i))
+                        .losingRank(thisKickers.get(i))
+                        .build();
             }
         }
         
-        return new ComparisonResult(Winner.TIE, null, null);
+        return ComparisonResult.builder()
+                .winner(Winner.TIE)
+                .winningRank(null)
+                .losingRank(null)
+                .build();
     }
 }

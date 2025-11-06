@@ -1,72 +1,30 @@
 package org.example.poker;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CompareHighCardHandsTest {
 
-    // TODO: Task 1 - Write a test for when White wins
-    // Bug report: "When White wins, the system incorrectly reports that Black wins!"
-    // OPTIONAL: First run tests with coverage - notice the "else if (comparison < 0)" branch in Hand.compare() is not covered!
-    // Test case: Black: "2H 3D 5S 9C KD", White: "2C 3H 4S 8C AH"
-    // Expected: White should win with Ace
-    // Write the test first, see it fail, then fix the bug in Hand.compare() line ~104
-    // Key lesson: Code coverage helps identify untested paths where bugs hide
-
-    // TODO: Task 2 - Write a test for losingRank bug
-    // Bug report: "The losingRank in ComparisonResult is sometimes incorrect!"
-    // Write a test that checks both getWinningRank() and getLosingRank()
-    // Test case: Black "AH KD 9C 7D 4S" vs White "AH KD 9C 7D 3S"
-    // Expected: winningRank=FOUR, losingRank=THREE
-    // The test will fail, exposing the bug in Hand.compare()
-    // After fixing the bug, refactor to use builder pattern to prevent similar bugs
-
-    // TODO: Task 4 - Refactor these tests into parameterized tests
-    // Notice how many tests follow the same pattern?
-    // Consider consolidating them using @ParameterizedTest and @CsvSource
-
-    // TODO: Task 5 - Write tests for immutability
-    // Bug report: "We're seeing incorrect comparison results! Sometimes a hand that should win is losing."
-    // Investigation: Client code was modifying the cards list: hand.getCards().clear()
-    // This breaks comparison logic because the hand becomes empty!
-    // Your task: Write tests that try to modify the cards list (clear(), add(), remove())
-    // Tests should expect UnsupportedOperationException
-    // Then fix Hand.getCards() to return an unmodifiable list
-    // Hint: Override Lombok's generated getter with Collections.unmodifiableList()
-    // Key lesson: Protect internal state by returning unmodifiable collections!
-
-
     @Test
-    void shouldReturnTieWhenAllKickersAreEqual() {
+    void shouldReportWhiteWinsWhenWhiteHasHigherCard() {
         // Given
         Hand black = Hand.parse("2H 3D 5S 9C KD");
-        Hand white = Hand.parse("2D 3H 5C 9S KH");
+        Hand white = Hand.parse("2C 3H 4S 8C AH");
         
         // When
         ComparisonResult result = black.compare(white);
         
         // Then
-        assertThat(result.getWinner()).isEqualTo(Winner.TIE);
-        assertThat(result.describe()).isEqualTo("Tie");
+        assertThat(result.getWinner()).isEqualTo(Winner.WHITE);
+        assertThat(result.describe()).isEqualTo("White wins - high card: Ace");
     }
 
     @Test
-    void shouldCompareHighCardHandsByDifferentKicker() {
-        // Given
-        Hand black = Hand.parse("2H 3D 5S 9C KD");
-        Hand white = Hand.parse("2C 3H 4S 8C KH");
-        
-        // When
-        ComparisonResult result = black.compare(white);
-        
-        // Then
-        assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
-        assertThat(result.describe()).isEqualTo("Black wins - high card: 9");
-    }
-
-    @Test
-    void shouldCompareHighCardHandsByLastKickerWhenOthersAreEqual() {
+    void shouldSetCorrectLosingRankWhenBlackWins() {
         // Given
         Hand black = Hand.parse("AH KD 9C 7D 4S");
         Hand white = Hand.parse("AH KD 9C 7D 3S");
@@ -76,20 +34,58 @@ class CompareHighCardHandsTest {
         
         // Then
         assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
-        assertThat(result.describe()).isEqualTo("Black wins - high card: 4");
+        assertThat(result.getWinningRank()).isEqualTo(Rank.FOUR);
+        assertThat(result.getLosingRank()).isEqualTo(Rank.THREE);
     }
 
-    @Test
-    void shouldCompareHighCardHandsBySecondKickerWhenFirstIsEqual() {
+    @ParameterizedTest
+    @CsvSource({
+            "'2H 3D 5S 9C KD', '2D 3H 5C 9S KH', TIE, 'Tie'",
+            "'2H 3D 5S 9C KD', '2C 3H 4S 8C KH', BLACK, 'Black wins - high card: 9'",
+            "'AH KD 9C 7D 4S', 'AH KD 9C 7D 3S', BLACK, 'Black wins - high card: 4'",
+            "'AH KD 9C 7D 4S', 'AH QD 9C 7D 4S', BLACK, 'Black wins - high card: King'"
+    })
+    void shouldCompareHighCardHands(String blackHand, String whiteHand, Winner expectedWinner, String expectedDescription) {
         // Given
-        Hand black = Hand.parse("AH KD 9C 7D 4S");
-        Hand white = Hand.parse("AH QD 9C 7D 4S");
+        Hand black = Hand.parse(blackHand);
+        Hand white = Hand.parse(whiteHand);
         
         // When
         ComparisonResult result = black.compare(white);
         
         // Then
-        assertThat(result.getWinner()).isEqualTo(Winner.BLACK);
-        assertThat(result.describe()).isEqualTo("Black wins - high card: King");
+        assertThat(result.getWinner()).isEqualTo(expectedWinner);
+        assertThat(result.describe()).isEqualTo(expectedDescription);
+    }
+
+    @Test
+    void shouldReturnUnmodifiableCardsList() {
+        // Given
+        Hand hand = Hand.parse("AH KD 9C 7D 4S");
+        
+        // When/Then
+        assertThatThrownBy(() -> hand.getCards().clear())
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void shouldNotAllowAddingCards() {
+        // Given
+        Hand hand = Hand.parse("AH KD 9C 7D 4S");
+        Card newCard = new Card(Rank.TWO, Suit.HEARTS);
+        
+        // When/Then
+        assertThatThrownBy(() -> hand.getCards().add(newCard))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void shouldNotAllowRemovingCards() {
+        // Given
+        Hand hand = Hand.parse("AH KD 9C 7D 4S");
+        
+        // When/Then
+        assertThatThrownBy(() -> hand.getCards().remove(0))
+                .isInstanceOf(UnsupportedOperationException.class);
     }
 }
