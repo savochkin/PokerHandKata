@@ -31,4 +31,13 @@ public enum Rank {
         }
         throw new IllegalArgumentException("Invalid rank symbol: " + symbol);
     }
+    
+    public static Rank fromValue(int value) {
+        for (Rank rank : values()) {
+            if (rank.value == value) {
+                return rank;
+            }
+        }
+        throw new IllegalArgumentException("Invalid rank value: " + value);
+    }
 }

@@ -34,6 +34,12 @@ public class ComparisonResult {
             case HIGH_CARD -> "high card";
             case ONE_PAIR -> "pair";
             case TWO_PAIR -> "two pair";
+            case THREE_OF_A_KIND -> "three of a kind";
+            case STRAIGHT -> "straight";
+            case FLUSH -> "flush";
+            case FULL_HOUSE -> "full house";
+            case FOUR_OF_A_KIND -> "four of a kind";
+            case STRAIGHT_FLUSH -> "straight flush";
         };
     }
     

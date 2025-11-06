@@ -80,53 +80,135 @@ public class Hand {
                 .map(Card::getRank)
                 .collect(Collectors.groupingBy(r -> r, Collectors.counting()));
         
-        // Find all pairs
+        // Get sorted ranks
+        List<Rank> sortedRanks = cards.stream()
+                .map(Card::getRank)
+                .sorted(Comparator.comparingInt(Rank::getValue).reversed())
+                .toList();
+        
+        // Check for flush
+        boolean isFlush = cards.stream()
+                .map(Card::getSuit)
+                .distinct()
+                .count() == 1;
+        
+        // Check for straight
+        boolean isStraight = isStraight(sortedRanks);
+        int straightHigh = isStraight ? getStraightHigh(sortedRanks) : 0;
+        
+        // STRAIGHT_FLUSH
+        if (isFlush && isStraight) {
+            return new HandRank(Category.STRAIGHT_FLUSH, List.of(Rank.fromValue(straightHigh)));
+        }
+        
+        // FOUR_OF_A_KIND
+        var quads = rankCounts.entrySet().stream()
+                .filter(e -> e.getValue() == 4)
+                .map(Map.Entry::getKey)
+                .findFirst();
+        
+        if (quads.isPresent()) {
+            Rank quadRank = quads.get();
+            Rank kicker = sortedRanks.stream()
+                    .filter(r -> !r.equals(quadRank))
+                    .findFirst()
+                    .orElseThrow();
+            return new HandRank(Category.FOUR_OF_A_KIND, List.of(quadRank, kicker));
+        }
+        
+        // FULL_HOUSE (3 + 2)
+        var trips = rankCounts.entrySet().stream()
+                .filter(e -> e.getValue() == 3)
+                .map(Map.Entry::getKey)
+                .findFirst();
+        
         var pairs = rankCounts.entrySet().stream()
                 .filter(e -> e.getValue() == 2)
                 .map(Map.Entry::getKey)
                 .sorted(Comparator.comparingInt(Rank::getValue).reversed())
                 .toList();
         
-        // Check for two pair
+        if (trips.isPresent() && !pairs.isEmpty()) {
+            return new HandRank(Category.FULL_HOUSE, List.of(trips.get(), pairs.get(0)));
+        }
+        
+        // FLUSH
+        if (isFlush) {
+            return new HandRank(Category.FLUSH, sortedRanks);
+        }
+        
+        // STRAIGHT
+        if (isStraight) {
+            return new HandRank(Category.STRAIGHT, List.of(Rank.fromValue(straightHigh)));
+        }
+        
+        // THREE_OF_A_KIND
+        if (trips.isPresent()) {
+            Rank tripRank = trips.get();
+            List<Rank> kickers = sortedRanks.stream()
+                    .filter(r -> !r.equals(tripRank))
+                    .toList();
+            List<Rank> allRanks = new java.util.ArrayList<>();
+            allRanks.add(tripRank);
+            allRanks.addAll(kickers);
+            return new HandRank(Category.THREE_OF_A_KIND, allRanks);
+        }
+        
+        // TWO_PAIR
         if (pairs.size() == 2) {
-            // TWO_PAIR: [highPairRank, lowPairRank, kicker]
             Rank highPair = pairs.get(0);
             Rank lowPair = pairs.get(1);
-            Rank kicker = cards.stream()
-                    .map(Card::getRank)
+            Rank kicker = sortedRanks.stream()
                     .filter(r -> !r.equals(highPair) && !r.equals(lowPair))
                     .findFirst()
                     .orElseThrow();
-            
-            List<Rank> allRanks = List.of(highPair, lowPair, kicker);
-            return new HandRank(Category.TWO_PAIR, allRanks);
+            return new HandRank(Category.TWO_PAIR, List.of(highPair, lowPair, kicker));
         }
         
-        // Check for one pair
+        // ONE_PAIR
         if (pairs.size() == 1) {
-            // ONE_PAIR: [pairRank, kicker1, kicker2, kicker3]
             Rank pairRank = pairs.get(0);
-            List<Rank> kickers = cards.stream()
-                    .map(Card::getRank)
+            List<Rank> kickers = sortedRanks.stream()
                     .filter(r -> !r.equals(pairRank))
-                    .sorted(Comparator.comparingInt(Rank::getValue).reversed())
                     .toList();
-            
-            // Put pair rank first, then kickers
             List<Rank> allRanks = new java.util.ArrayList<>();
             allRanks.add(pairRank);
             allRanks.addAll(kickers);
-            
             return new HandRank(Category.ONE_PAIR, allRanks);
         }
         
-        // HIGH_CARD: Sort all cards by rank descending
-        List<Rank> kickers = cards.stream()
-                .map(Card::getRank)
-                .sorted(Comparator.comparingInt(Rank::getValue).reversed())
-                .toList();
-        
-        return new HandRank(Category.HIGH_CARD, kickers);
+        // HIGH_CARD
+        return new HandRank(Category.HIGH_CARD, sortedRanks);
+    }
+    
+    private boolean isStraight(List<Rank> sortedRanks) {
+        // Check regular straight
+        for (int i = 0; i < sortedRanks.size() - 1; i++) {
+            if (sortedRanks.get(i).getValue() - sortedRanks.get(i + 1).getValue() != 1) {
+                // Check for A-low straight (A 2 3 4 5)
+                return isWheelStraight(sortedRanks);
+            }
+        }
+        return true;
+    }
+    
+    private boolean isWheelStraight(List<Rank> sortedRanks) {
+        // A-low straight: A 5 4 3 2 (sorted descending)
+        return sortedRanks.size() == 5 &&
+                sortedRanks.get(0) == Rank.ACE &&
+                sortedRanks.get(1) == Rank.FIVE &&
+                sortedRanks.get(2) == Rank.FOUR &&
+                sortedRanks.get(3) == Rank.THREE &&
+                sortedRanks.get(4) == Rank.TWO;
+    }
+    
+    private int getStraightHigh(List<Rank> sortedRanks) {
+        // For A-low straight, high card is 5
+        if (isWheelStraight(sortedRanks)) {
+            return Rank.FIVE.getValue();
+        }
+        // Otherwise, highest card
+        return sortedRanks.get(0).getValue();
     }
 
     public ComparisonResult compare(Hand other) {
