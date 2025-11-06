@@ -1,22 +1,21 @@
 # Hexagonal Architecture Kata - Poker Hand Comparison
 
-A hands-on kata for learning hexagonal architecture (Ports & Adapters) by building a poker hand comparison service with multiple adapters.
+A hands-on kata for learning hexagonal architecture (Ports & Adapters) by studying a complete reference implementation, then extending it.
 
-## 📖 Business Context
+## 📖 What You'll Do
 
-**Gaming Platform Startup - MVP Requirements:**
-
-> "We're building a social poker platform. For our MVP, players need to submit their hands through our web app and see who wins. Later, we'll add a CLI for developers, store game history in a database, and let users view their comparison history."
+**Phase 1: Study** - Explore a complete, working poker hand comparison service built with hexagonal architecture  
+**Phase 2: Extend** - Replace the in-memory persistence adapter with a real database (PostgreSQL, MongoDB, etc.)
 
 ## 🎓 Learning Objectives
 
 By completing this kata, you will:
-- ✅ Understand hexagonal architecture structure
-- ✅ Learn to separate domain from infrastructure
-- ✅ Practice defining ports (contracts)
-- ✅ Implement multiple adapters for same port
-- ✅ See how domain stays pure and testable
-- ✅ Experience dependency inversion in practice
+- ✅ Understand hexagonal architecture structure by examining real code
+- ✅ See how domain stays pure and separated from infrastructure
+- ✅ Learn how ports define clear contracts between layers
+- ✅ Experience swapping adapters without touching domain/services
+- ✅ Practice dependency inversion in a real system
+- ✅ Understand why this architecture makes systems flexible and testable
 
 ## 🏗️ Architecture Overview
 
@@ -63,193 +62,238 @@ src/main/java/org/example/poker/
 └── PokerApplication.java            # Spring Boot main class
 ```
 
-## 📋 Use Cases
+## 🎯 Task 1: Review & Understand the Implementation (60-90 min)
 
-### ✅ Use Case 1: Compare Hands via Web Interface (IMPLEMENTED)
+**Goal:** Understand how hexagonal architecture works by exploring a complete, working implementation.
 
-**Business Value:** Players can submit hands through web app and see who wins.
+### Part 1: Explore the Domain (Pure Business Logic)
 
-**Architecture Flow:**
-```
-HTTP Request (JSON)
-    ↓
-RestCompareHandsController (Adapter - IN)
-    ↓ calls
-CompareHandsUseCase (Port - IN)
-    ↓ implemented by
-CompareHandsService (Application Service)
-    ↓ uses
-Hand.compare() (Domain Logic)
-    ↓ returns
-ComparisonResult (Domain Object)
-    ↓ mapped by adapter to
-CompareHandsResponse (REST DTO)
-    ↓
-HTTP Response (JSON)
-```
+**Files to examine:**
+- `app/domain/Hand.java`
+- `app/domain/Card.java`, `Rank.java`, `Suit.java`
+- `app/domain/Category.java`
+- `app/domain/ComparisonResult.java`
 
-**Key Components:**
+**What to notice:**
+- ✅ No Spring annotations (`@Component`, `@Service`, etc.)
+- ✅ No external dependencies (no HTTP, no database concepts)
+- ✅ Pure Java - could work in any context
+- ✅ Business rules are explicit and testable
 
-1. **Inbound Port:** `CompareHandsUseCase`
-   - Interface defining the use case
-   - Domain-centric contract
-   - No HTTP/REST concepts
+**Understanding Check:**
+1. Why does `Hand.java` have no Spring annotations?
+2. What would happen if we needed to change from Spring to Quarkus?
+3. Can you test `Hand.compare()` without starting Spring?
 
-2. **Application Service:** `CompareHandsService`
-   - Implements the use case
-   - Orchestrates domain logic
-   - Returns domain objects directly (no DTO mapping at this layer)
+---
 
-3. **REST Adapter:** `RestCompareHandsController`
-   - Translates HTTP requests to use case calls
-   - Maps domain objects (`ComparisonResult`) to REST DTOs (`CompareHandsResponse`)
-   - Handles REST-specific concerns (status codes, JSON, error handling)
-   - Depends on port, not on domain directly
+### Part 2: Understand Inbound Ports (What the Application Provides)
 
-**Testing:**
-- `CompareHandsUseCaseTest` - Use case tests (107 tests, no Spring)
-- `RestCompareHandsControllerTest` - Integration test (with Spring)
+**Files to examine:**
+- `app/port/in/CompareHandsUseCase.java`
+- `app/port/in/GetComparisonHistoryUseCase.java`
 
-**How to Run:**
+**What to notice:**
+- ✅ Just interfaces - no implementation
+- ✅ Use domain objects as input/output (not DTOs)
+- ✅ Express business capabilities, not technical details
+- ✅ No mention of HTTP, JSON, or REST
+
+**Understanding Check:**
+1. Why are these interfaces and not classes?
+2. What's the difference between a port and a service?
+3. Could a CLI adapter use `CompareHandsUseCase`? How?
+
+---
+
+### Part 3: Understand Application Services (Use Case Orchestration)
+
+**Files to examine:**
+- `app/service/CompareHandsService.java`
+- `app/service/GetComparisonHistoryService.java`
+
+**What to notice:**
+- ✅ Implements inbound ports
+- ✅ Orchestrates domain logic
+- ✅ Uses outbound ports (dependencies)
+- ✅ Returns domain objects (no DTO mapping here)
+
+**Understanding Check:**
+1. What does `CompareHandsService` depend on?
+2. Why does it depend on `ComparisonHistoryRepository` interface, not the concrete implementation?
+3. Where does the actual hand comparison logic live?
+
+---
+
+### Part 4: Understand Outbound Ports (What the Application Needs)
+
+**Files to examine:**
+- `app/port/out/ComparisonHistoryRepository.java`
+
+**What to notice:**
+- ✅ Interface defining what domain needs
+- ✅ Domain defines the contract, not the adapter
+- ✅ No implementation details (in-memory vs database)
+- ✅ Uses domain objects (`ComparisonHistoryEntry`)
+
+**Understanding Check:**
+1. Who defines this interface - the domain or the adapter?
+2. Why is this better than the service directly using `InMemoryComparisonHistoryRepository`?
+3. What would you need to change to swap in-memory storage for PostgreSQL?
+
+---
+
+### Part 5: Understand Inbound Adapters (Driving the Application)
+
+**Files to examine:**
+- `adapters/in/rest/RestCompareHandsController.java`
+- `adapters/in/rest/CompareHandsRequest.java` / `CompareHandsResponse.java`
+- `adapters/in/rest/HistoryController.java`
+- `adapters/in/cli/CliCompareHandsAdapter.java`
+
+**What to notice:**
+- ✅ Depend on ports, not services directly
+- ✅ Translate external format (JSON/CLI) to domain calls
+- ✅ Map domain objects to external DTOs
+- ✅ Handle adapter-specific concerns (HTTP status codes, error handling)
+- ✅ Multiple adapters use the same ports
+
+**Understanding Check:**
+1. Why does `RestCompareHandsController` inject `CompareHandsUseCase` instead of `CompareHandsService`?
+2. Where does JSON-to-domain mapping happen?
+3. How can REST and CLI both work simultaneously?
+4. What would change if you added a GraphQL adapter?
+
+---
+
+### Part 6: Understand Outbound Adapters (Driven by the Application)
+
+**Files to examine:**
+- `adapters/out/persistence/InMemoryComparisonHistoryRepository.java`
+
+**What to notice:**
+- ✅ Implements outbound port
+- ✅ Contains all technical details (Map, UUID generation)
+- ✅ Domain doesn't know about this implementation
+- ✅ Easy to swap for different implementation
+
+**Understanding Check:**
+1. What interface does this implement?
+2. Why use a `Map<String, ComparisonHistoryEntry>` instead of a real database?
+3. What files would you need to change to add PostgreSQL support?
+4. Would the domain or service need to change?
+
+---
+
+### Part 7: Trace a Complete Request (End-to-End)
+
+**Exercise:** Trace what happens when you call:
 ```bash
-# Start the application
-./mvnw.sh spring-boot:run
-
-# Test with curl
 curl -X POST http://localhost:8080/api/poker/compare \
   -H "Content-Type: application/json" \
-  -d '{
-    "black": "AH KD 9C 7D 4S",
-    "white": "KH QD 9C 7D 4S"
-  }'
-
-# Expected response:
-{
-  "winner": "BLACK",
-  "description": "Black wins - high card: Ace"
-}
+  -d '{"black": "AH KD 9C 7D 4S", "white": "KH QD 9C 7D 4S"}'
 ```
+
+**Step-by-step flow:**
+1. **HTTP Request arrives** → Spring receives JSON
+2. **REST Adapter** (`RestCompareHandsController`)
+   - Deserializes JSON to `CompareHandsRequest` (DTO)
+   - Calls `compareHandsUseCase.compare(black, white)`
+3. **Inbound Port** (`CompareHandsUseCase`)
+   - Just an interface - routes to implementation
+4. **Application Service** (`CompareHandsService`)
+   - Parses hand strings to `Hand` objects (domain)
+   - Calls `Hand.compare()` (domain logic)
+   - Gets `ComparisonResult` (domain object)
+   - Calls `repository.save()` (outbound port)
+   - Returns `ComparisonResult`
+5. **Outbound Port** (`ComparisonHistoryRepository`)
+   - Routes to implementation
+6. **Outbound Adapter** (`InMemoryComparisonHistoryRepository`)
+   - Stores in `Map<String, Entry>`
+7. **Back to REST Adapter**
+   - Maps `ComparisonResult` to `CompareHandsResponse` (DTO)
+   - Returns JSON with HTTP 200
+
+**Understanding Check:**
+1. At which layer does JSON parsing happen?
+2. At which layer does business logic (hand comparison) happen?
+3. At which layer does persistence happen?
+4. Which layers would change if you replaced REST with GraphQL?
+5. Which layers would change if you replaced in-memory storage with PostgreSQL?
 
 ---
 
-### ✅ Task 2: Compare Hands via CLI (IMPLEMENTED)
+### Part 8: Run and Experiment
 
-**Business Need:** Developers need command-line access for testing.
-
-**What Was Built:**
-- ✅ CLI adapter using Spring Shell (`CliCompareHandsAdapter`)
-- ✅ Reuses existing `CompareHandsUseCase` port
-- ✅ REST and CLI work simultaneously
-
-**How to Use:**
+**Start the application:**
 ```bash
-# Start app
 ./mvnw.sh spring-boot:run
-
-# Use CLI
-shell:> compare "AH KD 9C 7D 4S" "KH QD 9C 7D 4S"
-Black wins - high card: Ace
-
-# REST still works simultaneously
-curl -X POST http://localhost:8080/api/poker/compare ...
 ```
 
-**Files Created:**
-- `adapters/in/cli/CliCompareHandsAdapter.java`
-- `adapters/in/cli/CliCompareHandsAdapterTest.java`
-
-**Dependencies Added:**
-```xml
-<dependency>
-    <groupId>org.springframework.shell</groupId>
-    <artifactId>spring-shell-starter</artifactId>
-    <version>3.2.0</version>
-</dependency>
-```
-
-**Architecture Insight Demonstrated:** 
-- ✅ Same service, different adapter
-- ✅ Domain doesn't know about CLI vs REST
-- ✅ Adapter interchangeability in action
-
----
-
-### ✅ Task 3: Store Comparison History (IMPLEMENTED)
-
-**Business Need:** Store all comparisons for analytics and auditing.
-
-**What Was Built:**
-- ✅ Outbound port: `ComparisonHistoryRepository` interface
-- ✅ Domain object: `ComparisonHistoryEntry`
-- ✅ Adapter: `InMemoryComparisonHistoryRepository` implementation
-- ✅ Service modified to save each comparison
-
-**Architecture:**
-```
-CompareHandsService
-    ↓ (uses)
-ComparisonHistoryRepository (Port - defines what domain needs)
-    ↑ (implements)
-InMemoryComparisonHistoryRepository (Adapter - provides implementation)
-```
-
-**Files Created:**
-- `app/domain/ComparisonHistoryEntry.java` (domain object)
-- `app/port/out/ComparisonHistoryRepository.java` (outbound port)
-- `adapters/out/persistence/InMemoryComparisonHistoryRepository.java` (adapter)
-- `adapters/out/persistence/InMemoryComparisonHistoryRepositoryTest.java` (tests)
-
-**Modified:**
-- `app/service/CompareHandsService.java` - now injects and uses repository
-
-**Architecture Insights Demonstrated:**
-- ✅ Domain defines what it needs (port)
-- ✅ Adapter provides implementation
-- ✅ Easy to swap in-memory → database later
-- ✅ Domain stays pure (no persistence logic)
-- ✅ Dependency inversion in action
-
----
-
-### 🔨 Task 4: View Comparison History (20 min)
-
-**Business Need:** Users want to see their past comparisons.
-
-**What to Build:**
-- Inbound port: `GetComparisonHistoryUseCase`
-- Service: `GetComparisonHistoryService`
-- REST endpoint: `GET /api/poker/history`
-
-**Acceptance Criteria:**
+**Try the REST API:**
 ```bash
-# Compare some hands first
-curl -X POST http://localhost:8080/api/poker/compare ...
+# Compare hands
+curl -X POST http://localhost:8080/api/poker/compare \
+  -H "Content-Type: application/json" \
+  -d '{"black": "AH KD 9C 7D 4S", "white": "KH QD 9C 7D 4S"}'
 
 # View history
 curl http://localhost:8080/api/poker/history
-
-# Response:
-[
-  {
-    "id": "uuid",
-    "blackHand": "AH KD 9C 7D 4S",
-    "whiteHand": "KH QD 9C 7D 4S",
-    "winner": "BLACK",
-    "description": "Black wins - high card: Ace",
-    "timestamp": "2025-11-06T12:00:00"
-  }
-]
 ```
 
-**Files to Create:**
-- `app/port/in/GetComparisonHistoryUseCase.java`
-- `app/service/GetComparisonHistoryService.java`
-- `adapters/in/rest/HistoryController.java`
+**Try the CLI:**
+```bash
+# In the Spring Shell prompt:
+shell:> compare "AH KD 9C 7D 4S" "KH QD 9C 7D 4S"
+```
 
-**Architecture Insight:**
-- New use case, new port
-- Reuses existing outbound port (repository)
-- Shows how multiple use cases share adapters
+**Understanding Check:**
+1. Do both REST and CLI save to the same history?
+2. Can you see history entries from both interfaces?
+3. What proves that both adapters use the same service?
+
+---
+
+### Part 9: Final Understanding Check
+
+Answer these questions to verify your understanding:
+
+1. **Dependency Direction:**
+   - Does the domain depend on adapters, or do adapters depend on the domain?
+   - Why is this important?
+
+2. **Adapter Interchangeability:**
+   - Can you have multiple inbound adapters for the same use case?
+   - Can you have multiple outbound adapters for the same port?
+   - Give examples from this codebase.
+
+3. **Testing:**
+   - Can you test domain logic without Spring?
+   - Can you test services with mock repositories?
+   - Where would you write integration tests?
+
+4. **Change Impact:**
+   - What would change if you added a mobile app?
+   - What would change if you switched from Spring to Micronaut?
+   - What would change if you added PostgreSQL?
+
+5. **Boundaries:**
+   - What belongs in the domain layer?
+   - What belongs in adapters?
+   - What belongs in services?
+
+---
+
+### ✅ Task 1 Complete When:
+
+- [ ] You can explain the flow from HTTP request to domain and back
+- [ ] You understand why domain has no framework dependencies
+- [ ] You can identify which files would change for different scenarios
+- [ ] You can answer all understanding check questions
+- [ ] You've run both REST and CLI and seen them share the same service
+
+**Next:** Task 2 - Extend the system with a real database adapter
 
 ---
 
@@ -290,10 +334,10 @@ curl http://localhost:8080/api/poker/history
 
 ## 🚀 Getting Started
 
-### 1. Study the Reference Implementation
+### Step 1: Verify the Implementation Works
 
 ```bash
-# Run tests to see it works
+# Run tests to see everything works
 ./mvnw.sh test
 
 # Start the application
@@ -303,48 +347,30 @@ curl http://localhost:8080/api/poker/history
 curl -X POST http://localhost:8080/api/poker/compare \
   -H "Content-Type: application/json" \
   -d '{"black": "AH KD 9C 7D 4S", "white": "KH QD 9C 7D 4S"}'
+
+# View history
+curl http://localhost:8080/api/poker/history
 ```
 
-### 2. Explore the Code
+### Step 2: Complete Task 1 (Study Guide)
 
-**Start with:**
-1. `app/port/in/CompareHandsUseCase.java` - The port definition
-2. `app/service/CompareHandsService.java` - The service implementation
-3. `adapters/in/rest/RestCompareHandsController.java` - The REST adapter
+Follow the **Task 1** section above to systematically explore:
+- Domain layer (pure business logic)
+- Ports (contracts)
+- Services (orchestration)
+- Adapters (infrastructure)
+- Complete request flow
 
-**Notice:**
-- Port is just an interface (no implementation details)
-- Service depends on port, not on adapter
-- Adapter translates HTTP → port calls
-- Domain (`Hand.java`) has no Spring annotations
+Answer all "Understanding Check" questions as you go.
 
-### 3. Complete Tasks in Order
+### Step 3: Complete Task 2 (Extension)
 
-Start with Task 2 (CLI), then Task 3 (persistence), then Task 4 (history view).
+Once you understand the architecture, extend the system by implementing a real database adapter (PostgreSQL, MongoDB, etc.) to replace the in-memory storage.
 
-Each task builds on the previous one and reinforces hexagonal architecture concepts.
-
----
-
-## 💡 Tips
-
-### For Task 2 (CLI):
-- Use `@ShellComponent` annotation
-- Use `@ShellMethod` for commands
-- Inject `CompareHandsUseCase` (same as REST controller does)
-- CLI and REST both use the same service!
-
-### For Task 3 (Persistence):
-- Start with the port interface (what does domain need?)
-- Keep it simple: `save()` and `findAll()`
-- Use `Map<UUID, Entry>` for in-memory storage
-- Service should depend on port, not implementation
-
-### For Task 4 (History):
-- New use case = new inbound port
-- Reuse outbound port from Task 3
-- Service calls repository through port
-- REST controller calls service through port
+This will demonstrate:
+- How easy it is to swap adapters
+- Why ports matter
+- That domain and services don't change
 
 ---
 
@@ -407,20 +433,20 @@ RestCompareHandsControllerTest
 
 ---
 
-## ✅ Success Criteria
+## ✅ Reference Implementation Status
 
-Current Progress:
+This kata provides a **complete, working implementation** for study:
 
-- ✅ All tests pass (120 tests)
+- ✅ All tests pass (120+ tests)
 - ✅ REST API works for comparison
 - ✅ CLI works for comparison (both simultaneously)
 - ✅ Comparisons are saved to history
-- ⏳ History can be retrieved via REST API (Task 4 - TODO)
+- ✅ History can be retrieved via REST API
 - ✅ Domain layer has no framework dependencies
 - ✅ Ports define clear contracts
 - ✅ Adapters are interchangeable
 
-**Tasks Completed: 3/4**
+**Your Task:** Study the implementation (Task 1), then extend it (Task 2)
 
 ---
 
@@ -462,4 +488,4 @@ After completing the kata, discuss:
 
 ---
 
-**Ready to start? Begin with studying Use Case 1, then implement Task 2!** 🚀
+**Ready to start? Begin with Task 1 to understand the complete implementation!** 🚀
