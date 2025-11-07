@@ -15,7 +15,22 @@ By completing this kata, you will:
 - ✅ Experience swapping adapters without touching domain/services
 - ✅ Understand why this architecture makes systems flexible and testable
 
-## 🏗️ Architecture Overview
+
+## 🎯 Task 1: Review the MVP Implementation
+
+### Background
+
+Your team has been working on a **poker hand comparison service**. The MVP is complete and features:
+
+✅ **Core functionality** - Compare two poker hands and determine the winner  
+✅ **REST API** - HTTP endpoint for hand comparison  
+✅ **CLI interface** - Interactive shell for testing  
+✅ **History tracking** - Store comparison results in a shared audit database  
+✅ **Clean architecture** - Built with hexagonal architecture principles
+
+**Your task:** Review the implementation to understand how hexagonal architecture works in practice. The team wants you to learn the patterns before extending the system.
+
+### Architecture Overview
 
 This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
 
@@ -85,28 +100,12 @@ This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
                     └─────────────────────────────────────────┘
 ```
 
-### Key Principles
+**Key Principles:**
 
 1. **Domain at the center** - Pure business logic with no external dependencies
 2. **Ports define contracts** - Interfaces that express what the domain needs/provides
 3. **Adapters connect to outside world** - REST APIs, CLI, databases, etc.
 4. **Dependency inversion** - Domain doesn't depend on adapters; adapters depend on domain
-
----
-
-## 🎯 Task 1: Review the MVP Implementation (60-90 min)
-
-### Background
-
-Your team has been working on a **poker hand comparison service**. The MVP is complete and features:
-
-✅ **Core functionality** - Compare two poker hands and determine the winner  
-✅ **REST API** - HTTP endpoint for hand comparison  
-✅ **CLI interface** - Interactive shell for testing  
-✅ **History tracking** - Store comparison results in a shared audit database  
-✅ **Clean architecture** - Built with hexagonal architecture principles
-
-**Your task:** Review the implementation to understand how hexagonal architecture works in practice. The team wants you to learn the patterns before extending the system.
 
 ---
 
@@ -276,7 +275,7 @@ shell:> compare "AH KD 9C 7D 4S" "KH QD 9C 7D 4S"
 
 ---
 
-## 🎯 Task 2: Implement an Adapter for External Audit System (60-90 min)
+## 🎯 Task 2: Implement an Adapter for External Audit System
 
 **Goal:** Apply what you learned by implementing an adapter that integrates with an external system.
 
