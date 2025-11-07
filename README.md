@@ -405,7 +405,6 @@ However, **requirements changed**:
 **Optional - Write Tests:**
 - A test template is available in `src/main/resources/task2-solution/AuditSystemAdapterTest.java.solution`
 - Copy it to `src/test/java/.../auditsystem/` if you want to use tests
-- Or just focus on implementing the adapter without tests
 
 ---
 
