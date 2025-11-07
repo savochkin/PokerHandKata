@@ -70,8 +70,17 @@ This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
                     │     OUTBOUND ADAPTERS (Driven)          │
                     │                                         │
                     │  ┌──────────────────────────────────┐   │
-                    │  │  InMemoryDB                      │   │
-                    │  │  (can be swapped for PostgreSQL) │   │
+                    │  │  AuditSharedDB                   │   │
+                    │  │  (maps to shared DB)             │   │
+                    │  └──────────────┬───────────────────┘   │
+                    └─────────────────┼───────────────────────┘
+                                      ▼
+                    ┌─────────────────────────────────────────┐
+                    │     EXTERNAL SYSTEMS                     │
+                    │                                         │
+                    │  ┌──────────────────────────────────┐   │
+                    │  │  AuditSharedDBClient             │   │
+                    │  │  (shared database)               │   │
                     │  └──────────────────────────────────┘   │
                     └─────────────────────────────────────────┘
 ```
@@ -107,19 +116,26 @@ src/main/java/org/example/poker/
 ├── adapters/                        # OUTSIDE THE HEXAGON
 │   ├── in/                          # Inbound adapters (driving)
 │   │   ├── rest/                    # REST API adapter (IMPLEMENTED)
-│   │   │   ├── RestCompareHandsController.java
 │   │   │   ├── CompareHandsRequest.java (REST input DTO)
 │   │   │   └── CompareHandsResponse.java (REST output DTO)
 │   │   └── cli/                     # CLI adapter (IMPLEMENTED)
 │   │       └── CliCompareHandsAdapter.java
 │   └── out/                         # Outbound adapters (driven)
-│       └── inmemorydb/              # In-memory DB adapter (IMPLEMENTED)
-│           └── InMemoryDB.java
+│       ├── auditshareddb/           # Shared audit DB adapter (IMPLEMENTED)
+│       │   └── AuditSharedDB.java
+│       └── auditsystem/             # Audit system adapter (TASK 2: TO IMPLEMENT)
+│           └── (You will create AuditSystemAdapter.java here)
+│
+├── externalsystems/                 # EXTERNAL SYSTEMS (outside our control)
+│   ├── auditdb/                     # Shared audit database (Task 1)
+│   │   └── AuditSharedDBClient.java # Database client
+│   └── auditsystem/                 # External audit system (Task 2)
+│       ├── AuditSystem.java         # External system API
+│       ├── AuditRecord.java         # External system data model
+│       └── ComparisonOutcome.java   # External system data model
 │
 └── PokerApplication.java            # Spring Boot main class
 ```
-
-## 🎯 Task 1: Review & Understand the Implementation (60-90 min)
 
 **Goal:** Understand how hexagonal architecture works by exploring a complete, working implementation.
 
@@ -168,7 +184,7 @@ src/main/java/org/example/poker/
 
 ---
 
-### Part 3: Understand Application Service (Use Case Orchestration)
+### Part 3: Understand Application Service 
 
 **Files to examine:**
 - `app/service/CompareHandsService.java`
@@ -204,9 +220,8 @@ src/main/java/org/example/poker/
 Should we use 'ExternalSystemPort' with many operations, or is it better to use a 'HistoricalPort' and a 'LeaderboardPort'?
 3. What if we later decide to use another system for the leaderboard? 
 4. What if the external system we use has a much more complex domain model - do we need to mirror it in our domain model?
-5. What if the external DB has a DTO class - HistoricalRecord. Can we use it in our adapter? 
-6. How would this affect us if we would like to migrate to another DB later?
-7. What would you need to change to swap in-memory storage for PostgreSQL?
+5. What if the external DB has a DTO class - AuditRecord. Can we use it in our adapter? 
+6. How would this affect us if we are forced to migrate from a shared DB to an API when communicating with an AuditSystem?
 
 ---
 
@@ -226,7 +241,7 @@ Should we use 'ExternalSystemPort' with many operations, or is it better to use 
 - ✅ Multiple adapters use the same ports
 
 **Understanding Check:**
-1. Why does `RestCompareHandsController` inject `CompareHandsUseCase` instead of `CompareHandsService`?
+1. Why does `RestCompareHandsController` inject `CompareHandsUseCase` instead of `CompareHandsService`? Can we even make CompareHandsService not public?
 2. Where does JSON-to-domain mapping happen?
 3. How can REST and CLI both work simultaneously?
 4. What would change if you added a GraphQL adapter?
@@ -237,22 +252,22 @@ Should we use 'ExternalSystemPort' with many operations, or is it better to use 
 ### Part 6: Understand Outbound Adapters (Driven by the Application)
 
 **Files to examine:**
-- `adapters/out/inmemorydb/InMemoryDB.java`
+- `adapters/out/auditshareddb/AuditSharedDB.java`
+- `externalsystems/auditdb/AuditSharedDBClient.java`
 
 **What to notice:**
-- ✅ Implements outbound port
-- ✅ Contains all technical details (Map, UUID generation)
-- ✅ Domain doesn't know about this implementation
-- ✅ Easy to swap for different implementation
+- ✅ Adapter implements outbound port
+- ✅ Adapter delegates to external system client (`AuditSharedDBClient`)
+- ✅ Adapter maps between domain objects and database format (key-value maps)
+- ✅ Domain doesn't know about the database or its format
+- ✅ External system is clearly separated
 
 **Understanding Check:**
-1. What interface does this implement?
-2. If we need to use an external system to store the history, what would we need to do?
-3. What if the external system client migrates from REST to GraphQL?
-4. Would the domain or service need to change in the above case?
-5. What do we usually test when we are testing an outbound adapter?
-
-
+1. What interface does the adapter implement?
+2. What is the role of `AuditSharedDBClient`? Is it part of our application?
+3. Why does the adapter need mapping methods (`toDatabaseRecord`, `toDomain`)?
+4. If we need to use a different external system, what would we need to do?
+5. Would the domain or service need to change if we swap external systems?
 
 ---
 
@@ -280,14 +295,6 @@ curl http://localhost:8080/api/poker/history
 shell:> compare "AH KD 9C 7D 4S" "KH QD 9C 7D 4S"
 ```
 
-**Understanding Check:**
-1. Do both REST and CLI save to the same history?
-2. Can you see history entries from both interfaces?
-3. What proves that both adapters use the same service?
-
----
----
-
 ### ✅ Task 1 Complete When:
 
 - [ ] You can explain the flow from HTTP request to domain and back
@@ -296,9 +303,178 @@ shell:> compare "AH KD 9C 7D 4S" "KH QD 9C 7D 4S"
 - [ ] You can answer all understanding check questions
 - [ ] You've run both REST and CLI and seen them share the same service
 
-**Next:** Task 2 - Extend the system with a real database adapter
+---
 
-TODO
+## 🎯 Task 2: Implement an Adapter for External Audit System (60-90 min)
+
+**Goal:** Apply what you learned by implementing an adapter that integrates with an external system.
+
+### Background
+
+**The situation:**
+
+Initially, your poker comparison application stored history in a **shared audit database** (the `AuditSharedDB` adapter you explored in Task 1). This worked fine for initial requirements.
+
+However, **requirements changed**:
+- Initially, you were asked to store history in a **shared Audit Database**
+- But the Compliance Team decided to **move away from shared databases** to a microservices architecture.
+- Now you must use the **Audit System API** instead
+
+**The Audit System:**
+- Maintained by a different team (Compliance team)
+- Has its own data model (`AuditRecord`, `ComparisonOutcome`)
+- Provides a Java API (`AuditSystem`)
+- **You cannot change this system** - you must adapt to it
+- Their model is **different** from your domain model
+
+**The challenge:**
+- External system model: `AuditRecord` with `ComparisonOutcome`
+- Your domain model: `ComparisonHistoryEntry` with `ComparisonResult`
+- You need to bridge this gap **without changing your domain**
+
+**Your task:** Create an adapter that allows your poker application to store comparison history using the Audit System API, while keeping your domain pure and unchanged.
+
+---
+
+### Part 1: Understand the External System
+
+**Files to examine:**
+- `externalsystems/auditsystem/AuditSystem.java` - External system API
+- `externalsystems/auditsystem/AuditRecord.java` - External system data model
+- `externalsystems/auditsystem/ComparisonOutcome.java` - External system data model
+
+**Compare with Task 1:**
+- Task 1: `AuditSharedDB` adapter → `AuditSharedDBClient` (Map<String, String>)
+- Task 2: `AuditSystemAdapter` → `AuditSystem` (AuditRecord)
+- **Same pattern, different external systems!**
+
+**Key observations:**
+1. The external system has its own data model (not our domain model)
+2. We must use their API: `storeRecord()`, `retrieveAllRecords()`
+3. We must map between our domain and their model
+4. This is a **realistic scenario** - external systems rarely match our domain
+5. Notice the **parallel structure** with `AuditSharedDB` from Task 1
+---
+
+### Part 2: Implement the Adapter
+
+**Create:** `adapters/out/auditsystem/AuditSystemAdapter.java`
+
+**Requirements:**
+
+1. **Implement the port interface:**
+   ```java
+   public class AuditSystemAdapter implements ComparisonHistoryRepository {
+       // Your implementation
+   }
+   ```
+
+2. **Use the external system:**
+   - Create an instance of `AuditSystem`
+   - Delegate storage operations to it
+   - Use its API (`storeRecord()`, `retrieveAllRecords()`)
+
+3. **Map between models:**
+   - Domain → External: `ComparisonHistoryEntry` → `AuditRecord`
+   - External → Domain: `AuditRecord` → `ComparisonHistoryEntry`
+   - Handle nested objects: `ComparisonResult` ↔ `ComparisonOutcome`
+
+4. **Handle IDs:**
+   - Generate UUID for new entries (if ID is null)
+   - This is a domain rule: repository assigns IDs
+
+5. **Constructor:**
+   ```java
+   public AuditSystemAdapter() {
+       // Initialize AuditSystem
+   }
+   
+   // Optional: Constructor for testing with specific instance
+   public AuditSystemAdapter(AuditSystem auditSystem) {
+       this.auditSystem = auditSystem;
+   }
+   ```
+
+**Hints:**
+- The adapter is responsible for ALL mapping logic
+- Keep domain pure - no external system types in domain
+- Map enums using `.name()` and `valueOf()`
+- Handle nullable fields (winningRank, losingRank)
+- Look at `AuditSharedDB` for reference - very similar structure!
+
+**Optional - Write Tests:**
+- A test template is available in `src/main/resources/task2-solution/AuditSystemAdapterTest.java.solution`
+- Copy it to `src/test/java/.../auditsystem/` if you want to use tests
+- Or just focus on implementing the adapter without tests
+
+---
+
+### Part 3: Verify Integration
+
+**Run tests:**
+```bash
+./mvnw.sh test
+```
+
+**Expected:**
+- All existing tests still pass (domain, services, other adapters)
+- Your new adapter tests pass
+- Application still works with in-memory adapter (default)
+
+**Understanding Check:**
+1. Did you need to change any domain code? Why not?
+2. Did you need to change the port interface? Why not?
+3. Can both `AuditSharedDB` and `AuditSystemAdapter` coexist? How?
+4. What would happen if the external system changes its data model?
+
+---
+
+### Part 4: Switch Adapters (Optional)
+
+**Goal:** See how easy it is to swap adapters.
+
+**Update Spring configuration** to use your new adapter:
+
+1. Find where `AuditSharedDB` is created (Spring `@Repository`)
+2. Replace it with `AuditSystemAdapter`
+3. Run the application
+4. Verify comparisons are now stored via the Audit System
+
+**Understanding Check:**
+1. What files did you need to change to swap adapters?
+2. Did the domain or services need to change?
+3. What does this demonstrate about hexagonal architecture?
+
+---
+
+### ✅ Task 2 Complete When:
+
+- [ ] `AuditSystemAdapter` implements `ComparisonHistoryRepository`
+- [ ] Adapter correctly maps between domain and external system models
+- [ ] All existing tests still pass
+- [ ] You can explain why the adapter is needed
+- [ ] You understand the role of mapping in adapters
+- [ ] You can swap between `AuditSharedDB` and `AuditSystemAdapter`
+
+**💡 Stuck?** A reference solution is available in `src/main/resources/task2-solution/` - but try to implement it yourself first!
+
+---
+
+### 💡 Key Learnings from Task 2:
+
+1. **Requirements change, domain stays stable** - We added a new adapter without touching domain
+2. **Adapters isolate external systems** - Domain doesn't know about `AuditSystem`
+3. **Mapping is adapter responsibility** - Keep domain pure
+4. **External systems have their own models** - We adapt to them, not vice versa
+5. **Ports enable interchangeability** - Multiple adapters for same port
+6. **Hexagonal architecture enables flexibility** - Easy to swap implementations
+7. **Pattern reuse** - Similar adapters have similar structures
+
+**The power of hexagonal architecture:** When requirements changed from shared database to external audit system API, we only needed to create a new adapter. The domain, services, and other adapters remained completely unchanged. This is the flexibility that hexagonal architecture provides!
+
+**Congratulations!** You've now implemented a complete hexagonal architecture system with multiple adapters! 🎉
+
+---
 
 ## 📖 Further Reading
 

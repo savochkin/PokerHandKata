@@ -1,0 +1,128 @@
+package org.example.poker.adapters.out.auditsystem;
+
+import org.example.poker.app.domain.*;
+import org.example.poker.app.port.out.ComparisonHistoryRepository;
+import org.example.poker.externalsystems.auditsystem.AuditRecord;
+import org.example.poker.externalsystems.auditsystem.AuditSystem;
+import org.example.poker.externalsystems.auditsystem.ComparisonOutcome;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+/**
+ * REFERENCE SOLUTION for Task 2
+ * 
+ * Adapter for integrating with the external Audit System.
+ * 
+ * This is an OUTBOUND ADAPTER (driven adapter):
+ * - Implements the port defined by our domain
+ * - Integrates with external Audit System
+ * - Maps between our domain objects and external system's data model
+ * - Domain doesn't know about the external system
+ * 
+ * Responsibilities:
+ * - Implement the port interface (what our domain needs)
+ * - Map domain ↔ external system model (adapter's responsibility)
+ * - Delegate to external system for storage operations
+ * - Assign IDs to new entries (domain rule)
+ * 
+ * Key insight: The external system has its own data model (AuditRecord, ComparisonOutcome)
+ * which is different from our domain model. The adapter bridges this gap.
+ */
+public class AuditSystemAdapter implements ComparisonHistoryRepository {
+    
+    private final AuditSystem auditSystem;
+    
+    /**
+     * Creates adapter with external audit system.
+     */
+    public AuditSystemAdapter() {
+        this.auditSystem = new AuditSystem();
+    }
+    
+    /**
+     * Creates adapter with provided audit system.
+     * Useful for testing with a specific instance.
+     */
+    public AuditSystemAdapter(AuditSystem auditSystem) {
+        this.auditSystem = auditSystem;
+    }
+    
+    @Override
+    public ComparisonHistoryEntry save(ComparisonHistoryEntry entry) {
+        // Generate ID if not present (domain rule: repository assigns IDs)
+        ComparisonHistoryEntry entryWithId = entry.getId() == null
+                ? entry.toBuilder().id(UUID.randomUUID().toString()).build()
+                : entry;
+        
+        // Map domain to external system model (adapter responsibility)
+        AuditRecord auditRecord = toAuditRecord(entryWithId);
+        
+        // Delegate to external system
+        auditSystem.storeRecord(auditRecord);
+        
+        return entryWithId;
+    }
+    
+    @Override
+    public List<ComparisonHistoryEntry> findAll() {
+        // Retrieve from external system
+        List<AuditRecord> auditRecords = auditSystem.retrieveAllRecords();
+        
+        // Map external system model to domain (adapter responsibility)
+        return auditRecords.stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Clears all history (useful for testing).
+     * Not part of the port interface - adapter-specific operation.
+     */
+    public void clear() {
+        auditSystem.clearAllRecords();
+    }
+    
+    /**
+     * Maps domain object to external system model.
+     * This is adapter responsibility - keeps domain pure.
+     */
+    private AuditRecord toAuditRecord(ComparisonHistoryEntry entry) {
+        ComparisonOutcome outcome = new ComparisonOutcome(
+                entry.getResult().getWinner().name(),
+                entry.getResult().getWinningRank() != null ? entry.getResult().getWinningRank().name() : null,
+                entry.getResult().getLosingRank() != null ? entry.getResult().getLosingRank().name() : null,
+                entry.getResult().getCategory().name()
+        );
+        
+        return new AuditRecord(
+                entry.getId(),
+                entry.getBlackHand(),
+                entry.getWhiteHand(),
+                outcome,
+                entry.getTimestamp()
+        );
+    }
+    
+    /**
+     * Maps external system model to domain object.
+     * This is adapter responsibility - keeps domain pure.
+     */
+    private ComparisonHistoryEntry toDomain(AuditRecord record) {
+        ComparisonResult result = ComparisonResult.builder()
+                .winner(Winner.valueOf(record.getOutcome().getWinner()))
+                .winningRank(record.getOutcome().getWinningRank() != null ? Rank.valueOf(record.getOutcome().getWinningRank()) : null)
+                .losingRank(record.getOutcome().getLosingRank() != null ? Rank.valueOf(record.getOutcome().getLosingRank()) : null)
+                .category(Category.valueOf(record.getOutcome().getCategory()))
+                .build();
+        
+        return ComparisonHistoryEntry.builder()
+                .id(record.getId())
+                .blackHand(record.getBlackHand())
+                .whiteHand(record.getWhiteHand())
+                .result(result)
+                .timestamp(record.getTimestamp())
+                .build();
+    }
+}
