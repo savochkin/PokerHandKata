@@ -1,4 +1,4 @@
-package org.example.poker.adapters.out.persistence;
+package org.example.poker.adapters.out.inmemorydb;
 
 import org.example.poker.app.domain.ComparisonHistoryEntry;
 import org.example.poker.app.port.out.ComparisonHistoryRepository;
@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Easy to swap for a real database implementation later.
  */
 @Repository
-public class InMemoryComparisonHistoryRepository implements ComparisonHistoryRepository {
+public class InMemoryDB implements ComparisonHistoryRepository {
     
     private final Map<String, ComparisonHistoryEntry> storage = new ConcurrentHashMap<>();
     

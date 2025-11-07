@@ -1,4 +1,4 @@
-package org.example.poker.adapters.out.persistence;
+package org.example.poker.adapters.out.inmemorydb;
 
 import org.example.poker.app.domain.ComparisonHistoryEntry;
 import org.example.poker.app.domain.ComparisonResult;
@@ -17,13 +17,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests the adapter implementation in isolation.
  */
 @DisplayName("InMemory Repository Adapter Tests")
-class InMemoryComparisonHistoryRepositoryTest {
+class InMemoryDBTest {
     
-    private InMemoryComparisonHistoryRepository repository;
+    private InMemoryDB repository;
     
     @BeforeEach
     void setUp() {
-        repository = new InMemoryComparisonHistoryRepository();
+        repository = new InMemoryDB();
     }
     
     @Test

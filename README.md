@@ -10,16 +10,71 @@ A hands-on kata for learning hexagonal architecture (Ports & Adapters) by studyi
 ## 🎓 Learning Objectives
 
 By completing this kata, you will:
-- ✅ Understand hexagonal architecture structure by examining real code
-- ✅ See how domain stays pure and separated from infrastructure
-- ✅ Learn how ports define clear contracts between layers
+- ✅ See how domain stays pure and separated from infrastructure (and how this is achieved)
+- ✅ Learn how ports define clear contracts between the application and the infrastructure
 - ✅ Experience swapping adapters without touching domain/services
-- ✅ Practice dependency inversion in a real system
 - ✅ Understand why this architecture makes systems flexible and testable
 
 ## 🏗️ Architecture Overview
 
 This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │      INBOUND ADAPTERS (Driving)         │
+                    │                                         │
+                    │  ┌──────────────┐   ┌──────────────┐   │
+                    │  │ REST API     │   │     CLI      │   │
+                    │  │ Controller   │   │   Adapter    │   │
+                    │  └──────┬───────┘   └──────┬───────┘   │
+                    └─────────┼──────────────────┼───────────┘
+                              │                  │
+                              ▼                  ▼
+                    ┌─────────────────────────────────────────┐
+                    │         INBOUND PORTS (Use Cases)       │
+                    │                                         │
+                    │    CompareHandsUseCase                  │
+                    │    GetComparisonHistoryUseCase          │
+                    └─────────────────┬───────────────────────┘
+                                      │
+                    ╔═════════════════╧═════════════════╗
+                    ║                                   ║
+                    ║         APPLICATION               ║
+                    ║                                   ║
+                    ║    ┌─────────────────────┐        ║
+                    ║    │   Domain Model      │        ║
+                    ║    │                     │        ║
+                    ║    │  Hand, Card, Rank   │        ║
+                    ║    │  ComparisonResult   │        ║
+                    ║    │  Category, Winner   │        ║
+                    ║    └─────────────────────┘        ║
+                    ║                                   ║
+                    ║    ┌─────────────────────┐        ║
+                    ║    │   Services          │        ║
+                    ║    │                     │        ║
+                    ║    │  CompareHandsService│        ║
+                    ║    │  (implements both   │        ║
+                    ║    │   use cases)        │        ║
+                    ║    └─────────────────────┘        ║
+                    ║                                   ║
+                    ╚═════════════════╤═════════════════╝
+                                      │
+                    ┌─────────────────┴───────────────────────┐
+                    │      OUTBOUND PORTS (Dependencies)      │
+                    │                                         │
+                    │    ComparisonHistoryRepository          │
+                    └─────────────────┬───────────────────────┘
+                              │                  
+                              ▼                  
+                    ┌─────────────────────────────────────────┐
+                    │     OUTBOUND ADAPTERS (Driven)          │
+                    │                                         │
+                    │  ┌──────────────────────────────────┐   │
+                    │  │  InMemoryDB                      │   │
+                    │  │  (can be swapped for PostgreSQL) │   │
+                    │  └──────────────────────────────────┘   │
+                    └─────────────────────────────────────────┘
+```
 
 ### Key Principles
 
@@ -38,14 +93,16 @@ src/main/java/org/example/poker/
 │   │   ├── Card.java, Rank.java, Suit.java
 │   │   ├── Category.java
 │   │   ├── ComparisonResult.java
-│   │   └── Winner.java
+│   │   ├── Winner.java
+│   │   └── HandComparisonService.java  # Domain service (NO Spring)
 │   ├── port/
 │   │   ├── in/                      # Inbound ports (use cases)
-│   │   │   └── CompareHandsUseCase.java
+│   │   │   ├── CompareHandsUseCase.java
+│   │   │   └── GetComparisonHistoryUseCase.java
 │   │   └── out/                     # Outbound ports (dependencies)
-│   │       └── ComparisonHistoryRepository.java (IMPLEMENTED)
+│   │       └── ComparisonHistoryRepository.java
 │   └── service/
-│       └── CompareHandsService.java # Application service
+│       └── CompareHandsService.java         # Application service (thin layer)
 │
 ├── adapters/                        # OUTSIDE THE HEXAGON
 │   ├── in/                          # Inbound adapters (driving)
@@ -56,8 +113,8 @@ src/main/java/org/example/poker/
 │   │   └── cli/                     # CLI adapter (IMPLEMENTED)
 │   │       └── CliCompareHandsAdapter.java
 │   └── out/                         # Outbound adapters (driven)
-│       └── persistence/             # Persistence adapter (IMPLEMENTED)
-│           └── InMemoryComparisonHistoryRepository.java
+│       └── inmemorydb/              # In-memory DB adapter (IMPLEMENTED)
+│           └── InMemoryDB.java
 │
 └── PokerApplication.java            # Spring Boot main class
 ```
@@ -81,9 +138,12 @@ src/main/java/org/example/poker/
 - ✅ Business rules are explicit and testable
 
 **Understanding Check:**
-1. Why does `Hand.java` have no Spring annotations?
-2. What would happen if we needed to change from Spring to Quarkus?
-3. Can you test `Hand.compare()` without starting Spring?
+1. Would the domain model be affected if we need to migrate from Spring to Quarkus?
+2. Can you test the comparison logic without starting Spring?
+3. Check if a database is used to test the domain service implementing the business requirement that every comparison should be saved in history?
+4. What would happen if we decide to store the history in a different database? Would we need to change any tests? Would we need to change the domain service? 
+5. Notice that the HandComparisonService does not depend on the real database. How was this achieved?
+6. Explain how the dependency inversion works here for HandComparisonService and the actual DB used in the app?
 
 ---
 
@@ -100,28 +160,30 @@ src/main/java/org/example/poker/
 - ✅ No mention of HTTP, JSON, or REST
 
 **Understanding Check:**
-1. Why are these interfaces and not classes?
-2. What's the difference between a port and a service?
-3. Could a CLI adapter use `CompareHandsUseCase`? How?
+1. What drives the inbound ports? Are they driven by what is needed by the presentation level (UI) or the domain? 
+2. Why inbound ports are often called use cases?
+3. Are we required to always have 1-1 mapping between inboudn port (usecase) and the app service implementing it?
+2. Notice that we have two inbound ports (use cases) but only one app service implementing them. Can we also choose to split it into two - one per interface? 
+3. What if we decide that our app service is too complex and decide to split it into two? Would that affect our clients (REST and CLI adapters)?
 
 ---
 
-### Part 3: Understand Application Services (Use Case Orchestration)
+### Part 3: Understand Application Service (Use Case Orchestration)
 
 **Files to examine:**
 - `app/service/CompareHandsService.java`
-- `app/service/GetComparisonHistoryService.java`
 
 **What to notice:**
-- ✅ Implements inbound ports
-- ✅ Orchestrates domain logic
-- ✅ Uses outbound ports (dependencies)
+- ✅ Implements both inbound ports (`CompareHandsUseCase` and `GetComparisonHistoryUseCase`)
+- ✅ Delegates to domain service (`HandComparisonService`)
+- ✅ Thin layer - just wiring and delegation
 - ✅ Returns domain objects (no DTO mapping here)
 
 **Understanding Check:**
 1. What does `CompareHandsService` depend on?
-2. Why does it depend on `ComparisonHistoryRepository` interface, not the concrete implementation?
-3. Where does the actual hand comparison logic live?
+2. Would this service be affected if we decide to migrate from Spring to Quarkus?
+3. What is the responsibility of this service?
+4. What is the difference between a domain service and an app service?
 
 ---
 
@@ -137,9 +199,14 @@ src/main/java/org/example/poker/
 - ✅ Uses domain objects (`ComparisonHistoryEntry`)
 
 **Understanding Check:**
-1. Who defines this interface - the domain or the adapter?
-2. Why is this better than the service directly using `InMemoryComparisonHistoryRepository`?
-3. What would you need to change to swap in-memory storage for PostgreSQL?
+1. Who defines this interface - the domain or the external system or the adapter?
+2. Suppose we use an external system 'ExternalSystem' for both saving historical records and integrating with a leaderboard. 
+Should we use 'ExternalSystemPort' with many operations, or is it better to use a 'HistoricalPort' and a 'LeaderboardPort'?
+3. What if we later decide to use another system for the leaderboard? 
+4. What if the external system we use has a much more complex domain model - do we need to mirror it in our domain model?
+5. What if the external DB has a DTO class - HistoricalRecord. Can we use it in our adapter? 
+6. How would this affect us if we would like to migrate to another DB later?
+7. What would you need to change to swap in-memory storage for PostgreSQL?
 
 ---
 
@@ -163,13 +230,14 @@ src/main/java/org/example/poker/
 2. Where does JSON-to-domain mapping happen?
 3. How can REST and CLI both work simultaneously?
 4. What would change if you added a GraphQL adapter?
+5. What do we usually test when testing an inbound adapter?
 
 ---
 
 ### Part 6: Understand Outbound Adapters (Driven by the Application)
 
 **Files to examine:**
-- `adapters/out/persistence/InMemoryComparisonHistoryRepository.java`
+- `adapters/out/inmemorydb/InMemoryDB.java`
 
 **What to notice:**
 - ✅ Implements outbound port
@@ -179,52 +247,16 @@ src/main/java/org/example/poker/
 
 **Understanding Check:**
 1. What interface does this implement?
-2. Why use a `Map<String, ComparisonHistoryEntry>` instead of a real database?
-3. What files would you need to change to add PostgreSQL support?
-4. Would the domain or service need to change?
+2. If we need to use an external system to store the history, what would we need to do?
+3. What if the external system client migrates from REST to GraphQL?
+4. Would the domain or service need to change in the above case?
+5. What do we usually test when we are testing an outbound adapter?
+
+
 
 ---
 
-### Part 7: Trace a Complete Request (End-to-End)
-
-**Exercise:** Trace what happens when you call:
-```bash
-curl -X POST http://localhost:8080/api/poker/compare \
-  -H "Content-Type: application/json" \
-  -d '{"black": "AH KD 9C 7D 4S", "white": "KH QD 9C 7D 4S"}'
-```
-
-**Step-by-step flow:**
-1. **HTTP Request arrives** → Spring receives JSON
-2. **REST Adapter** (`RestCompareHandsController`)
-   - Deserializes JSON to `CompareHandsRequest` (DTO)
-   - Calls `compareHandsUseCase.compare(black, white)`
-3. **Inbound Port** (`CompareHandsUseCase`)
-   - Just an interface - routes to implementation
-4. **Application Service** (`CompareHandsService`)
-   - Parses hand strings to `Hand` objects (domain)
-   - Calls `Hand.compare()` (domain logic)
-   - Gets `ComparisonResult` (domain object)
-   - Calls `repository.save()` (outbound port)
-   - Returns `ComparisonResult`
-5. **Outbound Port** (`ComparisonHistoryRepository`)
-   - Routes to implementation
-6. **Outbound Adapter** (`InMemoryComparisonHistoryRepository`)
-   - Stores in `Map<String, Entry>`
-7. **Back to REST Adapter**
-   - Maps `ComparisonResult` to `CompareHandsResponse` (DTO)
-   - Returns JSON with HTTP 200
-
-**Understanding Check:**
-1. At which layer does JSON parsing happen?
-2. At which layer does business logic (hand comparison) happen?
-3. At which layer does persistence happen?
-4. Which layers would change if you replaced REST with GraphQL?
-5. Which layers would change if you replaced in-memory storage with PostgreSQL?
-
----
-
-### Part 8: Run and Experiment
+### Part 7: Run and Experiment
 
 **Start the application:**
 ```bash
@@ -254,35 +286,6 @@ shell:> compare "AH KD 9C 7D 4S" "KH QD 9C 7D 4S"
 3. What proves that both adapters use the same service?
 
 ---
-
-### Part 9: Final Understanding Check
-
-Answer these questions to verify your understanding:
-
-1. **Dependency Direction:**
-   - Does the domain depend on adapters, or do adapters depend on the domain?
-   - Why is this important?
-
-2. **Adapter Interchangeability:**
-   - Can you have multiple inbound adapters for the same use case?
-   - Can you have multiple outbound adapters for the same port?
-   - Give examples from this codebase.
-
-3. **Testing:**
-   - Can you test domain logic without Spring?
-   - Can you test services with mock repositories?
-   - Where would you write integration tests?
-
-4. **Change Impact:**
-   - What would change if you added a mobile app?
-   - What would change if you switched from Spring to Micronaut?
-   - What would change if you added PostgreSQL?
-
-5. **Boundaries:**
-   - What belongs in the domain layer?
-   - What belongs in adapters?
-   - What belongs in services?
-
 ---
 
 ### ✅ Task 1 Complete When:
@@ -295,189 +298,7 @@ Answer these questions to verify your understanding:
 
 **Next:** Task 2 - Extend the system with a real database adapter
 
----
-
-## 📚 Key Concepts
-
-### Inbound Ports (Use Cases)
-- Define what the application **provides** to the outside world
-- Interfaces in `app/port/in/`
-- Example: `CompareHandsUseCase`, `GetComparisonHistoryUseCase`
-
-### Outbound Ports (Dependencies)
-- Define what the application **needs** from the outside world
-- Interfaces in `app/port/out/`
-- Example: `ComparisonHistoryRepository`
-
-### Inbound Adapters (Driving)
-- Translate external requests into use case calls
-- In `adapters/in/`
-- Example: REST controllers, CLI, message consumers
-
-### Outbound Adapters (Driven)
-- Implement outbound ports
-- In `adapters/out/`
-- Example: Database repositories, external API clients
-
-### Domain
-- Pure business logic
-- No framework dependencies
-- Example: `Hand`, `Card`, comparison logic
-
-### Application Services
-- Orchestrate use cases
-- Implement inbound ports
-- Use outbound ports
-- In `app/service/`
-
----
-
-## 🚀 Getting Started
-
-### Step 1: Verify the Implementation Works
-
-```bash
-# Run tests to see everything works
-./mvnw.sh test
-
-# Start the application
-./mvnw.sh spring-boot:run
-
-# Test REST API
-curl -X POST http://localhost:8080/api/poker/compare \
-  -H "Content-Type: application/json" \
-  -d '{"black": "AH KD 9C 7D 4S", "white": "KH QD 9C 7D 4S"}'
-
-# View history
-curl http://localhost:8080/api/poker/history
-```
-
-### Step 2: Complete Task 1 (Study Guide)
-
-Follow the **Task 1** section above to systematically explore:
-- Domain layer (pure business logic)
-- Ports (contracts)
-- Services (orchestration)
-- Adapters (infrastructure)
-- Complete request flow
-
-Answer all "Understanding Check" questions as you go.
-
-### Step 3: Complete Task 2 (Extension)
-
-Once you understand the architecture, extend the system by implementing a real database adapter (PostgreSQL, MongoDB, etc.) to replace the in-memory storage.
-
-This will demonstrate:
-- How easy it is to swap adapters
-- Why ports matter
-- That domain and services don't change
-
----
-
-## 🎯 Hexagonal Architecture Benefits
-
-### 1. Technology Independence
-- Domain logic (Hand comparison) has zero dependencies on Spring, HTTP, or databases
-- Can test domain without any infrastructure
-- Can swap REST for GraphQL without touching domain
-
-### 2. Testability
-- Domain tests: Pure unit tests, fast, no mocks needed
-- Service tests: Test with mock ports
-- Adapter tests: Integration tests with real infrastructure
-
-### 3. Flexibility
-- Multiple UIs (REST + CLI) using same service
-- Easy to add new adapters (mobile app, message queue)
-- Easy to swap implementations (in-memory → PostgreSQL)
-
-### 4. Clear Boundaries
-- **Domain:** What the system does (business rules)
-- **Ports:** How to interact with domain (contracts)
-- **Adapters:** Technical details (HTTP, DB, CLI)
-
-### 5. Maintainability
-- Changes in REST API don't affect domain
-- Changes in database don't affect use cases
-- Each layer has single responsibility
-
----
-
-## 🛠️ Testing Strategy
-
-### Domain Tests (Existing)
-```
-CompareHighCardHandsTest
-ComparePairHandsTest
-...
-```
-- Test pure business logic
-- No infrastructure dependencies
-- Fast, reliable, focused
-
-### Service Tests
-```
-CompareHandsServiceTest
-```
-- Test use case orchestration
-- Mock outbound ports if needed
-- No Spring context required
-
-### Adapter Tests
-```
-RestCompareHandsControllerTest
-```
-- Test complete flow
-- Use Spring Boot test context
-- Verify HTTP/JSON handling
-
----
-
-## ✅ Reference Implementation Status
-
-This kata provides a **complete, working implementation** for study:
-
-- ✅ All tests pass (120+ tests)
-- ✅ REST API works for comparison
-- ✅ CLI works for comparison (both simultaneously)
-- ✅ Comparisons are saved to history
-- ✅ History can be retrieved via REST API
-- ✅ Domain layer has no framework dependencies
-- ✅ Ports define clear contracts
-- ✅ Adapters are interchangeable
-
-**Your Task:** Study the implementation (Task 1), then extend it (Task 2)
-
----
-
-## 🤔 Discussion Questions
-
-After completing the kata, discuss:
-
-1. **What would change if we swap in-memory storage for PostgreSQL?**
-   - Only the adapter implementation
-   - Port stays the same
-   - Service stays the same
-   - Domain stays the same
-
-2. **How would you add a GraphQL adapter?**
-   - Create new adapter in `adapters/in/graphql/`
-   - Reuse existing `CompareHandsUseCase` port
-   - No changes to service or domain
-
-3. **Why keep domain pure (no Spring annotations)?**
-   - Testable without infrastructure
-   - Framework-independent
-   - Business logic is explicit
-   - Can use domain in any context
-
-4. **What's the benefit of ports?**
-   - Clear contracts
-   - Dependency inversion
-   - Adapter interchangeability
-   - Testability with mocks
-
----
+TODO
 
 ## 📖 Further Reading
 
