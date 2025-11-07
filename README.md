@@ -92,52 +92,23 @@ This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
 3. **Adapters connect to outside world** - REST APIs, CLI, databases, etc.
 4. **Dependency inversion** - Domain doesn't depend on adapters; adapters depend on domain
 
-### Folder Structure
+---
 
-```
-src/main/java/org/example/poker/
-├── app/                             # INSIDE THE HEXAGON
-│   ├── domain/                      # Pure business logic
-│   │   ├── Hand.java
-│   │   ├── Card.java, Rank.java, Suit.java
-│   │   ├── Category.java
-│   │   ├── ComparisonResult.java
-│   │   ├── Winner.java
-│   │   └── HandComparisonService.java  # Domain service (NO Spring)
-│   ├── port/
-│   │   ├── in/                      # Inbound ports (use cases)
-│   │   │   ├── CompareHandsUseCase.java
-│   │   │   └── GetComparisonHistoryUseCase.java
-│   │   └── out/                     # Outbound ports (dependencies)
-│   │       └── ComparisonHistoryRepository.java
-│   └── service/
-│       └── CompareHandsService.java         # Application service (thin layer)
-│
-├── adapters/                        # OUTSIDE THE HEXAGON
-│   ├── in/                          # Inbound adapters (driving)
-│   │   ├── rest/                    # REST API adapter (IMPLEMENTED)
-│   │   │   ├── CompareHandsRequest.java (REST input DTO)
-│   │   │   └── CompareHandsResponse.java (REST output DTO)
-│   │   └── cli/                     # CLI adapter (IMPLEMENTED)
-│   │       └── CliCompareHandsAdapter.java
-│   └── out/                         # Outbound adapters (driven)
-│       ├── auditshareddb/           # Shared audit DB adapter (IMPLEMENTED)
-│       │   └── AuditSharedDB.java
-│       └── auditsystem/             # Audit system adapter (TASK 2: TO IMPLEMENT)
-│           └── (You will create AuditSystemAdapter.java here)
-│
-├── externalsystems/                 # EXTERNAL SYSTEMS (outside our control)
-│   ├── auditdb/                     # Shared audit database (Task 1)
-│   │   └── AuditSharedDBClient.java # Database client
-│   └── auditsystem/                 # External audit system (Task 2)
-│       ├── AuditSystem.java         # External system API
-│       ├── AuditRecord.java         # External system data model
-│       └── ComparisonOutcome.java   # External system data model
-│
-└── PokerApplication.java            # Spring Boot main class
-```
+## 🎯 Task 1: Review the MVP Implementation (60-90 min)
 
-**Goal:** Understand how hexagonal architecture works by exploring a complete, working implementation.
+### Background
+
+Your team has been working on a **poker hand comparison service**. The MVP is complete and features:
+
+✅ **Core functionality** - Compare two poker hands and determine the winner  
+✅ **REST API** - HTTP endpoint for hand comparison  
+✅ **CLI interface** - Interactive shell for testing  
+✅ **History tracking** - Store comparison results in a shared audit database  
+✅ **Clean architecture** - Built with hexagonal architecture principles
+
+**Your task:** Review the implementation to understand how hexagonal architecture works in practice. The team wants you to learn the patterns before extending the system.
+
+---
 
 ### Part 1: Explore the Domain (Pure Business Logic)
 
