@@ -113,9 +113,8 @@ This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
 
 **Files to examine:**
 - `app/domain/Hand.java`
-- `app/domain/Card.java`, `Rank.java`, `Suit.java`
-- `app/domain/Category.java`
 - `app/domain/ComparisonResult.java`
+-`app/domain/HandConparisonService.java`
 
 **What to notice:**
 - ✅ No Spring annotations (`@Component`, `@Service`, etc.)
@@ -127,7 +126,7 @@ This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
 1. Would the domain model be affected if we need to migrate from Spring to Quarkus?
 2. Can you test the comparison logic without starting Spring?
 3. Check if a database is used to test the domain service implementing the business requirement that every comparison should be saved in history?
-4. What would happen if we decide to store the history in a different database? Would we need to change any tests? Would we need to change the domain service? 
+4. What would happen if we decide to store the history in a different database? Would we need to change any domain tests? Would we need to change the domain service? 
 5. Notice that the HandComparisonService does not depend on the real database. How was this achieved?
 6. Explain how the dependency inversion works here for HandComparisonService and the actual DB used in the app?
 
