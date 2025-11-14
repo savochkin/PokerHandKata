@@ -123,6 +123,9 @@ This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
 - ✅ Business rules are explicit and testable
 
 **Understanding Check:**
+
+**Instructions:** The **driver** answers the questions out loud. All **observers** vote (👍 agree / 👎 disagree) after each answer. If there's disagreement, **pause and discuss** until consensus is reached.
+
 1. Would the domain model be affected if we need to migrate from Spring to Quarkus?
 2. Can you test the comparison logic without starting Spring?
 3. Check if a database is used to test the domain service implementing the business requirement that every comparison should be saved in history?
@@ -145,6 +148,9 @@ This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
 - ✅ No mention of HTTP, JSON, or REST
 
 **Understanding Check:**
+
+**Instructions:** The **driver** answers the questions out loud. All **observers** vote (👍 agree / 👎 disagree) after each answer. If there's disagreement, **pause and discuss** until consensus is reached.
+
 1. What drives the inbound ports? Are they driven by what is needed by the presentation level (UI) or the domain? 
 2. Why inbound ports are often called use cases?
 3. Are we required to always have 1-1 mapping between inboudn port (usecase) and the app service implementing it?
@@ -165,6 +171,9 @@ This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
 - ✅ Returns domain objects (no DTO mapping here)
 
 **Understanding Check:**
+
+**Instructions:** The **driver** answers the questions out loud. All **observers** vote (👍 agree / 👎 disagree) after each answer. If there's disagreement, **pause and discuss** until consensus is reached.
+
 1. What does `CompareHandsService` depend on?
 2. Would this service be affected if we decide to migrate from Spring to Quarkus?
 3. What is the responsibility of this service?
@@ -184,6 +193,9 @@ This project demonstrates **Hexagonal Architecture** (Ports & Adapters):
 - ✅ Uses domain objects (`ComparisonHistoryEntry`)
 
 **Understanding Check:**
+
+**Instructions:** The **driver** answers the questions out loud. All **observers** vote (👍 agree / 👎 disagree) after each answer. If there's disagreement, **pause and discuss** until consensus is reached.
+
 1. Who defines this interface - the domain or the external system or the adapter?
 2. Suppose we use an external system 'ExternalSystem' for both saving historical records and integrating with a leaderboard. 
 Should we use 'ExternalSystemPort' with many operations, or is it better to use a 'HistoricalPort' and a 'LeaderboardPort'?
@@ -210,6 +222,9 @@ Should we use 'ExternalSystemPort' with many operations, or is it better to use 
 - ✅ Multiple adapters use the same ports
 
 **Understanding Check:**
+
+**Instructions:** The **driver** answers the questions out loud. All **observers** vote (👍 agree / 👎 disagree) after each answer. If there's disagreement, **pause and discuss** until consensus is reached.
+
 1. Why does `RestCompareHandsController` inject `CompareHandsUseCase` instead of `CompareHandsService`? Can we even make CompareHandsService not public?
 2. Where does JSON-to-domain mapping happen?
 3. How can REST and CLI both work simultaneously?
@@ -232,6 +247,9 @@ Should we use 'ExternalSystemPort' with many operations, or is it better to use 
 - ✅ External system is clearly separated
 
 **Understanding Check:**
+
+**Instructions:** The **driver** answers the questions out loud. All **observers** vote (👍 agree / 👎 disagree) after each answer. If there's disagreement, **pause and discuss** until consensus is reached.
+
 1. What interface does the adapter implement?
 2. What is the role of `AuditSharedDBClient`? Is it part of our application?
 3. Why does the adapter need mapping methods (`toDatabaseRecord`, `toDomain`)?
@@ -325,7 +343,53 @@ However, **requirements changed**:
 5. Notice the **parallel structure** with `AuditSharedDB` from Task 1
 ---
 
-### Part 2: Implement the Adapter
+### Part 2: Review and Enable Tests
+
+**Before implementing**, review the existing test suite:
+
+1. **Open the test file:**
+   ```
+   src/test/java/org/example/poker/adapters/out/auditsystem/AuditSystemAdapterTest.java
+   ```
+
+2. **Review the commented tests:**
+   - All test code is currently commented out with `/* ... */`
+   - Read through the tests to understand what behavior is expected
+   - Notice the test structure: setup, action, assertion
+   - These are **adapter integration tests** - they verify the adapter works with the external system
+
+3. **Understand what's being tested:**
+   - ✅ Adapter assigns IDs to new entries
+   - ✅ Entries are persisted to the external Audit System
+   - ✅ Multiple entries can be saved and retrieved
+   - ✅ All fields are preserved during save/retrieve cycle
+   - ✅ Empty repository returns empty list
+   - ✅ Multiple save operations work correctly
+
+4. **Enable the tests:**
+   - Remove the `@Disabled` annotation (line 30)
+   - Uncomment all imports at the top (lines 3-13)
+   - Uncomment the entire test body (lines 32-204)
+   - **Do NOT implement the adapter yet** - tests should fail
+
+5. **Run the tests to see them fail:**
+   ```bash
+   ./mvnw.sh test -Dtest=AuditSystemAdapterTest
+   ```
+   
+   **Expected:** Tests fail because `AuditSystemAdapter` doesn't exist yet
+
+**Why review tests first?**
+- Tests define the **contract** your adapter must fulfill
+- They show **how** the adapter should behave
+- They provide **examples** of usage
+- Following TDD: **failing test → implementation → passing test**
+
+---
+
+### Part 3: Implement the Adapter
+
+Now implement `AuditSystemAdapter` to make the tests pass.
 
 **Create:** `adapters/out/auditsystem/AuditSystemAdapter.java`
 
@@ -370,14 +434,11 @@ However, **requirements changed**:
 - Map enums using `.name()` and `valueOf()`
 - Handle nullable fields (winningRank, losingRank)
 - Look at `AuditSharedDB` for reference - very similar structure!
-
-**Optional - Write Tests:**
-- A test template is available in `src/main/resources/task2-solution/AuditSystemAdapterTest.java.solution`
-- Copy it to `src/test/java/.../auditsystem/` if you want to use tests
+- Use the tests as your guide for expected behavior
 
 ---
 
-### Part 3: Verify Integration
+### Part 4: Verify Integration
 
 **Run tests:**
 ```bash
@@ -390,6 +451,9 @@ However, **requirements changed**:
 - Application still works with in-memory adapter (default)
 
 **Understanding Check:**
+
+**Instructions:** The **driver** answers the questions out loud. All **observers** vote (👍 agree / 👎 disagree) after each answer. If there's disagreement, **pause and discuss** until consensus is reached.
+
 1. Did you need to change any domain code? Why not?
 2. Did you need to change the port interface? Why not?
 3. Can both `AuditSharedDB` and `AuditSystemAdapter` coexist? How?
@@ -397,32 +461,88 @@ However, **requirements changed**:
 
 ---
 
-### Part 4: Switch Adapters (Optional)
+### Part 5: Switch Adapters (Optional)
 
 **Goal:** See how easy it is to swap adapters.
 
+Before swapping adapters, let's understand how Spring wires dependencies:
+
+**What is `@Repository`?**
+- A Spring annotation that marks a class as a data access component
+- Spring automatically discovers classes with `@Repository` during component scanning
+- When Spring finds a `@Repository` implementing an interface, it registers that implementation in the application context
+
+**How does Spring choose which adapter to use?**
+- Your application service depends on `ComparisonHistoryRepository` (the port interface)
+- Spring scans for classes implementing this interface that have `@Repository` (or `@Component`)
+- If **only one** implementation is found, Spring automatically wires it
+- If **multiple** implementations exist, you need to specify which one (using `@Primary`, `@Qualifier`, or profiles)
+
+**Current state:**
+- `AuditSharedDB` has `@Repository` → Spring uses it
+- `AuditSystemAdapter` (once implemented) has no annotation → Spring ignores it
+
+**To swap adapters:**
+- Remove `@Repository` from the old adapter
+- Add `@Repository` to the new adapter
+- Spring will now wire the new implementation
+- **No changes to domain or service code needed!**
+
+---
+
+#### 🔄 Swapping the Adapter
+
 **Update Spring configuration** to use your new adapter:
 
-1. Find where `AuditSharedDB` is created (Spring `@Repository`)
-2. Replace it with `AuditSystemAdapter`
-3. Run the application
-4. Verify comparisons are now stored via the Audit System
+1. **Open `AuditSharedDB.java`** (in `adapters/out/auditshareddb/`)
+   - Find the `@Repository` annotation (line 34)
+   - Comment it out or remove it:
+     ```java
+     // @Repository  // Disabled - using AuditSystemAdapter instead
+     public class AuditSharedDB implements ComparisonHistoryRepository {
+     ```
+
+2. **Open `AuditSystemAdapter.java`** (in `adapters/out/auditsystem/`)
+   - Add `@Repository` annotation to the class:
+     ```java
+     import org.springframework.stereotype.Repository;
+     
+     @Repository
+     public class AuditSystemAdapter implements ComparisonHistoryRepository {
+     ```
+
+3. **Run the application**
+   ```bash
+   mvn spring-boot:run
+   ```
+
+4. **Verify the swap worked:**
+   - Make a hand comparison via the REST API or CLI
+   - Check console output - you should see Audit System messages instead of DB messages
+   - The application behavior is identical, but the storage mechanism changed
 
 **Understanding Check:**
+
+**Instructions:** The **driver** answers the questions out loud. All **observers** vote (👍 agree / 👎 disagree) after each answer. If there's disagreement, **pause and discuss** until consensus is reached.
+
 1. What files did you need to change to swap adapters?
 2. Did the domain or services need to change?
 3. What does this demonstrate about hexagonal architecture?
+4. Could you swap back to `AuditSharedDB` just as easily?
 
 ---
 
 ### ✅ Task 2 Complete When:
 
-- [ ] `AuditSystemAdapter` implements `ComparisonHistoryRepository`
+- [ ] Tests reviewed and enabled (Part 2)
+- [ ] Tests fail initially (adapter doesn't exist yet)
+- [ ] `AuditSystemAdapter` implements `ComparisonHistoryRepository` (Part 3)
 - [ ] Adapter correctly maps between domain and external system models
+- [ ] All adapter tests pass (Part 4)
 - [ ] All existing tests still pass
 - [ ] You can explain why the adapter is needed
 - [ ] You understand the role of mapping in adapters
-- [ ] You can swap between `AuditSharedDB` and `AuditSystemAdapter`
+- [ ] (Optional) You can swap between `AuditSharedDB` and `AuditSystemAdapter` (Part 5)
 
 **💡 Stuck?** A reference solution is available in `src/main/resources/task2-solution/` - but try to implement it yourself first!
 
