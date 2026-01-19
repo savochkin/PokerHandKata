@@ -24,6 +24,6 @@ public class MainHex {
          Invoice priced = service.priceAndStore(invoice);
          System.out.println("Subtotal: " + priced.subtotal());
          System.out.println("Tax: " + priced.tax());
-         System.out.println("Total: " + priced.total());
+         System.out.println("total: " + priced.total());
      }
 }
