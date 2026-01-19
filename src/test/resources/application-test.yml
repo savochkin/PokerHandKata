@@ -1,6 +1,0 @@
-spring:
-  shell:
-    interactive:
-      enabled: false
-  main:
-    web-application-type: servlet
